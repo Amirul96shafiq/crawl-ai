@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { AuthDialog } from "@/components/auth-dialog";
 import { LogOut, User as UserIcon } from "lucide-react";
 
 interface UserMenuProps {
@@ -17,7 +18,8 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user, guestRemaining }: UserMenuProps) {
-  const router = useRouter();
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "register">("login");
 
   if (user) {
     const initials = (user.name || user.email || "U")
@@ -54,31 +56,43 @@ export function UserMenu({ user, guestRemaining }: UserMenuProps) {
     );
   }
 
+  function openAuth(tab: "login" | "register") {
+    setAuthTab(tab);
+    setAuthOpen(true);
+  }
+
   return (
-    <div className="space-y-2">
-      {guestRemaining !== undefined && (
-        <p className="text-xs text-muted-foreground px-2">
-          {guestRemaining}/3 chats remaining today
-        </p>
-      )}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex-1"
-          onClick={() => router.push("/login")}
-        >
-          <UserIcon className="h-3.5 w-3.5 mr-1.5" />
-          Login
-        </Button>
-        <Button
-          size="sm"
-          className="flex-1"
-          onClick={() => router.push("/register")}
-        >
-          Register
-        </Button>
+    <>
+      <div className="space-y-2">
+        {guestRemaining !== undefined && (
+          <p className="text-xs text-muted-foreground px-2">
+            {guestRemaining}/3 chats remaining today
+          </p>
+        )}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => openAuth("login")}
+          >
+            <UserIcon className="h-3.5 w-3.5 mr-1.5" />
+            Login
+          </Button>
+          <Button
+            size="sm"
+            className="flex-1"
+            onClick={() => openAuth("register")}
+          >
+            Register
+          </Button>
+        </div>
       </div>
-    </div>
+      <AuthDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        defaultTab={authTab}
+      />
+    </>
   );
 }
