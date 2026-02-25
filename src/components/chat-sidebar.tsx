@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, Menu, Globe, X } from "lucide-react";
+import { Trash2, Menu, Globe, X, PanelLeftClose, PanelLeft, Plus } from "lucide-react";
 
 interface ChatItem {
   id: string;
@@ -35,17 +35,30 @@ function SidebarContent({
   chats,
   activeChatId,
   onDelete,
+  onCollapse,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
   onDelete: (id: string) => void;
+  onCollapse?: () => void;
 }) {
   const router = useRouter();
 
   return (
     <div className="flex h-full flex-col">
-      <div className="p-3">
-        <NewChatDialog guestRemaining={guestRemaining} />
+      <div className="p-3 flex items-center gap-2">
+        <div className="flex-1">
+          <NewChatDialog guestRemaining={guestRemaining} />
+        </div>
+        {onCollapse && (
+          <Button
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={onCollapse}
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </Button>
+        )}
       </div>
       <Separator />
       <ScrollArea className="flex-1">
@@ -111,6 +124,7 @@ function SidebarContent({
 
 export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
+  const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const activeChatId = pathname.startsWith("/chat/")
@@ -147,22 +161,40 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
     }
   }
 
-  const sidebarContent = (
-    <SidebarContent
-      user={user}
-      guestRemaining={guestRemaining}
-      chats={chats}
-      activeChatId={activeChatId}
-      onDelete={handleDelete}
-    />
-  );
-
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-[280px] border-r bg-card h-screen flex-col">
-        {sidebarContent}
-      </aside>
+      {collapsed ? (
+        <aside className="hidden md:flex border-r bg-card h-screen flex-col items-center py-3 gap-2 w-12 shrink-0">
+          <NewChatDialog guestRemaining={guestRemaining}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </NewChatDialog>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setCollapsed(false)}
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+          <div className="mt-auto">
+            <UserMenu user={user} guestRemaining={guestRemaining} collapsed />
+          </div>
+        </aside>
+      ) : (
+        <aside className="hidden md:flex w-[280px] border-r bg-card h-screen flex-col shrink-0">
+          <SidebarContent
+            user={user}
+            guestRemaining={guestRemaining}
+            chats={chats}
+            activeChatId={activeChatId}
+            onDelete={handleDelete}
+            onCollapse={() => setCollapsed(true)}
+          />
+        </aside>
+      )}
 
       {/* Mobile sidebar */}
       <Sheet>
@@ -176,7 +208,13 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[280px] p-0">
-          {sidebarContent}
+          <SidebarContent
+            user={user}
+            guestRemaining={guestRemaining}
+            chats={chats}
+            activeChatId={activeChatId}
+            onDelete={handleDelete}
+          />
         </SheetContent>
       </Sheet>
     </>

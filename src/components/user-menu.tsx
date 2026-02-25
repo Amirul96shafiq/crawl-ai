@@ -15,9 +15,10 @@ import { LogOut, User as UserIcon } from "lucide-react";
 interface UserMenuProps {
   user: { name?: string | null; email?: string | null } | null;
   guestRemaining?: number;
+  collapsed?: boolean;
 }
 
-export function UserMenu({ user, guestRemaining }: UserMenuProps) {
+export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
 
@@ -32,14 +33,22 @@ export function UserMenu({ user, guestRemaining }: UserMenuProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="w-full justify-start gap-2 px-2">
-            <Avatar className="h-7 w-7">
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-            <span className="truncate text-sm">
-              {user.name || user.email}
-            </span>
-          </Button>
+          {collapsed ? (
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+            </Button>
+          ) : (
+            <Button variant="ghost" className="w-full justify-start gap-2 px-2">
+              <Avatar className="h-7 w-7">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="truncate text-sm">
+                {user.name || user.email}
+              </span>
+            </Button>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
@@ -59,6 +68,26 @@ export function UserMenu({ user, guestRemaining }: UserMenuProps) {
   function openAuth(tab: "login" | "register") {
     setAuthTab(tab);
     setAuthOpen(true);
+  }
+
+  if (collapsed) {
+    return (
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={() => openAuth("login")}
+        >
+          <UserIcon className="h-4 w-4" />
+        </Button>
+        <AuthDialog
+          open={authOpen}
+          onOpenChange={setAuthOpen}
+          defaultTab={authTab}
+        />
+      </>
+    );
   }
 
   return (
