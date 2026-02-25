@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MessageSquare, Trash2, Menu, Globe, X } from "lucide-react";
+import { Trash2, Menu, Globe, X } from "lucide-react";
 
 interface ChatItem {
   id: string;
@@ -54,12 +54,11 @@ function SidebarContent({
             <div
               key={chat.id}
               className={cn(
-                "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors",
+                "group flex items-center gap-2 rounded-lg px-3 py-1 text-sm cursor-pointer hover:bg-accent transition-colors",
                 activeChatId === chat.id && "bg-accent",
               )}
               onClick={() => router.push(`/chat/${chat.id}`)}
             >
-              <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="flex-1 truncate">
                 {chat.title || "New Chat"}
               </span>

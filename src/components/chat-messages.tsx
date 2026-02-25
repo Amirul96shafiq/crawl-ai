@@ -1,7 +1,7 @@
 "use client";
 
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
-import { Bot, User } from "lucide-react";
+import { Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DisplayMessage {
@@ -56,11 +56,6 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
             >
               {message.content}
             </div>
-            {message.role === "user" && (
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                <User className="h-4 w-4" />
-              </div>
-            )}
           </div>
         ))}
         {isLoading && messages[messages.length - 1]?.role === "user" && (
