@@ -28,7 +28,12 @@ interface CrawlResult {
   links: DiscoveredLink[];
 }
 
-export function NewChatDialog({ children }: { children?: React.ReactNode }) {
+interface NewChatDialogProps {
+  children?: React.ReactNode;
+  guestRemaining?: number;
+}
+
+export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -38,6 +43,8 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
   const [urlTouched, setUrlTouched] = useState(false);
+
+  const limitReached = guestRemaining === 0;
 
   const urlInvalid = useMemo(() => {
     if (!urlTouched || !url.trim()) return false;
@@ -178,6 +185,12 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
 
         {step === "url" && (
           <div className="space-y-4">
+            {limitReached && (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                Daily chat limit reached. Register for unlimited access.
+              </div>
+            )}
             <div className="space-y-1.5">
               <div className="flex gap-2">
                 <Input
@@ -189,13 +202,13 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
                     if (error) setError("");
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !urlInvalid) handleCrawl();
+                    if (e.key === "Enter" && !urlInvalid && !limitReached) handleCrawl();
                   }}
-                  disabled={crawling}
+                  disabled={crawling || limitReached}
                   aria-invalid={urlInvalid || undefined}
                   className={urlInvalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50" : ""}
                 />
-                <Button onClick={handleCrawl} disabled={crawling || !url.trim() || urlInvalid}>
+                <Button onClick={handleCrawl} disabled={crawling || !url.trim() || urlInvalid || limitReached}>
                   {crawling ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

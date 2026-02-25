@@ -39,7 +39,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="p-3">
-        <NewChatDialog />
+        <NewChatDialog guestRemaining={guestRemaining} />
       </div>
       <Separator />
       <ScrollArea className="flex-1">
