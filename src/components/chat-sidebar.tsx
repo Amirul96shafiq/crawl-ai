@@ -120,7 +120,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
 
   useEffect(() => {
     fetchChats();
-  }, [pathname]);
+  }, [pathname, user?.email]);
 
   async function fetchChats() {
     try {
