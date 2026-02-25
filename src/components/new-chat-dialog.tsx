@@ -1,0 +1,266 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Plus, Globe, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+
+interface DiscoveredLink {
+  url: string;
+  text: string;
+}
+
+interface CrawlResult {
+  title: string;
+  content: string;
+  links: DiscoveredLink[];
+}
+
+export function NewChatDialog({ children }: { children?: React.ReactNode }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [url, setUrl] = useState("");
+  const [step, setStep] = useState<"url" | "links" | "creating">("url");
+  const [crawling, setCrawling] = useState(false);
+  const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
+  const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
+  const [error, setError] = useState("");
+
+  function reset() {
+    setUrl("");
+    setStep("url");
+    setCrawling(false);
+    setCrawlResult(null);
+    setSelectedLinks(new Set());
+    setError("");
+  }
+
+  async function handleCrawl() {
+    setError("");
+    if (!url.trim()) return;
+
+    try {
+      new URL(url);
+    } catch {
+      setError("Please enter a valid URL");
+      return;
+    }
+
+    setCrawling(true);
+    try {
+      const res = await fetch("/api/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to crawl URL");
+      }
+
+      const data: CrawlResult = await res.json();
+      setCrawlResult(data);
+      setStep("links");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to crawl URL");
+    } finally {
+      setCrawling(false);
+    }
+  }
+
+  function toggleLink(linkUrl: string) {
+    setSelectedLinks((prev) => {
+      const next = new Set(prev);
+      if (next.has(linkUrl)) {
+        next.delete(linkUrl);
+      } else if (next.size < 5) {
+        next.add(linkUrl);
+      } else {
+        toast.info("Maximum 5 sub-links allowed per chat");
+      }
+      return next;
+    });
+  }
+
+  async function handleCreate() {
+    if (!crawlResult) return;
+    setStep("creating");
+
+    try {
+      const res = await fetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          primaryPage: {
+            url,
+            title: crawlResult.title,
+            content: crawlResult.content,
+          },
+          subLinkUrls: Array.from(selectedLinks),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create chat");
+      }
+
+      const data = await res.json();
+      setOpen(false);
+      reset();
+      router.push(`/chat/${data.id}`);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create chat");
+      setStep("links");
+    }
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) reset();
+      }}
+    >
+      <DialogTrigger asChild>
+        {children || (
+          <Button className="w-full gap-2">
+            <Plus className="h-4 w-4" />
+            New Chat
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>
+            {step === "url" && "Enter a URL to chat about"}
+            {step === "links" && "Select additional pages (optional)"}
+            {step === "creating" && "Creating chat..."}
+          </DialogTitle>
+        </DialogHeader>
+
+        {error && (
+          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {step === "url" && (
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                placeholder="https://example.com/blog/article"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCrawl();
+                }}
+                disabled={crawling}
+              />
+              <Button onClick={handleCrawl} disabled={crawling || !url.trim()}>
+                {crawling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Crawl"
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              We&apos;ll extract the main content from the page so you can ask
+              questions about it.
+            </p>
+          </div>
+        )}
+
+        {step === "links" && crawlResult && (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-3 space-y-1">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Globe className="h-4 w-4" />
+                {crawlResult.title || url}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {crawlResult.content.length.toLocaleString()} characters
+                extracted
+              </p>
+            </div>
+
+            {crawlResult.links.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm">
+                  Found {crawlResult.links.length} links — select up to 5 to
+                  include:
+                </Label>
+                <ScrollArea className="h-[200px] rounded-md border p-3">
+                  <div className="space-y-2">
+                    {crawlResult.links.map((link) => (
+                      <label
+                        key={link.url}
+                        className="flex items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
+                      >
+                        <Checkbox
+                          checked={selectedLinks.has(link.url)}
+                          onCheckedChange={() => toggleLink(link.url)}
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm truncate">{link.text}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {link.url}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </ScrollArea>
+                {selectedLinks.size > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedLinks.size}/5 sub-links selected
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => { setStep("url"); setCrawlResult(null); }}>
+                Back
+              </Button>
+              <Button onClick={handleCreate}>
+                {selectedLinks.size > 0
+                  ? `Start Chat (${selectedLinks.size + 1} pages)`
+                  : "Start Chat"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === "creating" && (
+          <div className="flex flex-col items-center gap-3 py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              {selectedLinks.size > 0
+                ? "Crawling sub-links and creating chat..."
+                : "Creating chat..."}
+            </p>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

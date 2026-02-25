@@ -1,0 +1,27 @@
+---
+description: Project documentation reference for Crawl AI
+alwaysApply: true
+---
+
+# Crawl AI - Project Context
+
+This is a Next.js 15 ChatGPT-style app where users chat with AI about crawled webpage content.
+
+## Documentation
+
+Before making changes, consult the project docs in `docs/`:
+
+- `docs/README.md` - Project overview and core concept
+- `docs/architecture.md` - Tech stack, data flows, and file structure
+- `docs/database.md` - Prisma schema, models, relationships, and migration logic
+- `docs/features.md` - Feature specs (crawling, chat, auth, rate limits, UI/UX)
+- `docs/api.md` - All API route definitions with request/response formats
+
+## Key Decisions
+
+- **Auth**: NextAuth.js v5 with Credentials provider (email/password), JWT sessions
+- **Guest system**: cookie-based `guest_id`, 3 chats/day limit, migrated on login AND registration
+- **Crawling**: fetch + JSDOM + Mozilla Readability; sub-link discovery with user selection (max 5)
+- **AI context**: all ChatPage contents injected as system message per chat request
+- **Streaming**: Vercel AI SDK `useChat` hook + `streamText()` with OpenAI GPT-4o-mini
+- **Chat ownership**: `Chat.userId` (registered) XOR `Chat.guestId` (guest), never both
