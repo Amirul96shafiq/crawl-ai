@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -37,6 +37,20 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
   const [error, setError] = useState("");
+  const [urlTouched, setUrlTouched] = useState(false);
+
+  const urlInvalid = useMemo(() => {
+    if (!urlTouched || !url.trim()) return false;
+    try {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) return true;
+      if (!parsed.hostname.includes(".")) return true;
+      if (parsed.hostname.endsWith(".")) return true;
+      return false;
+    } catch {
+      return true;
+    }
+  }, [url, urlTouched]);
 
   function reset() {
     setUrl("");
@@ -45,6 +59,7 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
     setCrawlResult(null);
     setSelectedLinks(new Set());
     setError("");
+    setUrlTouched(false);
   }
 
   async function handleCrawl() {
@@ -163,23 +178,36 @@ export function NewChatDialog({ children }: { children?: React.ReactNode }) {
 
         {step === "url" && (
           <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="https://example.com/blog/article"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleCrawl();
-                }}
-                disabled={crawling}
-              />
-              <Button onClick={handleCrawl} disabled={crawling || !url.trim()}>
-                {crawling ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Crawl"
-                )}
-              </Button>
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="https://example.com/blog/article"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    if (!urlTouched) setUrlTouched(true);
+                    if (error) setError("");
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !urlInvalid) handleCrawl();
+                  }}
+                  disabled={crawling}
+                  aria-invalid={urlInvalid || undefined}
+                  className={urlInvalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50" : ""}
+                />
+                <Button onClick={handleCrawl} disabled={crawling || !url.trim() || urlInvalid}>
+                  {crawling ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Crawl"
+                  )}
+                </Button>
+              </div>
+              {urlInvalid && (
+                <p className="text-xs text-destructive">
+                  Please enter a valid URL starting with http:// or https://
+                </p>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               We&apos;ll extract the main content from the page so you can ask
