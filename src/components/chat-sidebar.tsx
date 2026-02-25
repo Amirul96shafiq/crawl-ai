@@ -164,8 +164,21 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      {collapsed ? (
-        <aside className="hidden md:flex border-r bg-card h-screen flex-col items-center py-3 gap-2 w-12 shrink-0">
+      <aside
+        className={cn(
+          "hidden md:flex border-r bg-card h-screen shrink-0 overflow-hidden relative transition-[width] duration-300 ease-in-out",
+          collapsed ? "w-12" : "w-[280px]",
+        )}
+      >
+        {/* Collapsed icons */}
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 w-12 flex flex-col items-center py-3 gap-2 transition-opacity duration-200",
+            collapsed
+              ? "opacity-100 delay-150 pointer-events-auto"
+              : "opacity-0 pointer-events-none",
+          )}
+        >
           <NewChatDialog guestRemaining={guestRemaining}>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Plus className="h-4 w-4" />
@@ -182,9 +195,17 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
           <div className="mt-auto">
             <UserMenu user={user} guestRemaining={guestRemaining} collapsed />
           </div>
-        </aside>
-      ) : (
-        <aside className="hidden md:flex w-[280px] border-r bg-card h-screen flex-col shrink-0">
+        </div>
+
+        {/* Expanded content */}
+        <div
+          className={cn(
+            "h-full w-[280px] min-w-[280px] transition-opacity duration-200",
+            collapsed
+              ? "opacity-0 pointer-events-none"
+              : "opacity-100 delay-150 pointer-events-auto",
+          )}
+        >
           <SidebarContent
             user={user}
             guestRemaining={guestRemaining}
@@ -193,8 +214,8 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onDelete={handleDelete}
             onCollapse={() => setCollapsed(true)}
           />
-        </aside>
-      )}
+        </div>
+      </aside>
 
       {/* Mobile sidebar */}
       <Sheet>
