@@ -9,7 +9,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NewChatDialog } from "@/components/new-chat-dialog";
 import { UserMenu } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
-import { MessageSquare, Trash2, Menu, Globe } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MessageSquare, Trash2, Menu, Globe, X } from "lucide-react";
 
 interface ChatItem {
   id: string;
@@ -57,17 +63,34 @@ function SidebarContent({
               <span className="flex-1 truncate">
                 {chat.title || "New Chat"}
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(chat.id);
-                }}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="bottom">
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(chat.id);
+                    }}
+                  >
+                    <Trash2 />
+                    Delete chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                    <X />
+                    Cancel
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           ))}
           {chats.length === 0 && (
