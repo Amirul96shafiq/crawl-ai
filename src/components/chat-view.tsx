@@ -57,8 +57,8 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
     <div className="flex flex-col h-full">
       <div
         className={cn(
-          "md:pl-4 pl-14",
-          compact ? "px-2 py-2" : "px-4 py-3",
+          "pl-14 pr-4 pt-6 pb-3 md:pl-4",
+          compact && "pr-2 py-2 md:px-2 md:py-2",
         )}
       >
         <UrlBadge pages={pages} />

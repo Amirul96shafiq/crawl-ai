@@ -39,7 +39,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
       ref={scrollRef}
       className={cn(
         "flex-1 overflow-y-auto",
-        compact ? "p-2" : "p-4",
+        compact ? "p-2 pt-4" : "p-4 pt-6",
       )}
     >
       <div

@@ -258,7 +258,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden fixed top-3 left-3 z-40"
+                className="md:hidden fixed top-3 left-3 z-40 bg-background/95 backdrop-blur-sm shadow-md border border-border/50 hover:bg-accent"
               >
                 <Menu className="h-5 w-5" />
               </Button>
