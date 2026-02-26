@@ -130,6 +130,8 @@ function SortableChatItem({
   isActive,
   compact,
   canPin,
+  menuOpen,
+  onMenuOpenChange,
   onDelete,
   onRename,
   onPin,
@@ -139,6 +141,8 @@ function SortableChatItem({
   isActive: boolean;
   compact: boolean;
   canPin: boolean;
+  menuOpen: boolean;
+  onMenuOpenChange: (open: boolean) => void;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onPin: (id: string, pinned: boolean) => void;
@@ -237,7 +241,9 @@ function SortableChatItem({
         </>
       )}
       <DropdownMenu
+        open={menuOpen}
         onOpenChange={(open) => {
+          onMenuOpenChange(open);
           if (!open && pendingRename) {
             setPendingRename(false);
             startEditing();
@@ -350,6 +356,8 @@ function SidebarContent({
   onCollapse,
   onReorder,
   identityKey,
+  openMenuChatId,
+  onOpenMenuChatIdChange,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
@@ -359,6 +367,8 @@ function SidebarContent({
   onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
   identityKey: string | null;
+  openMenuChatId: string | null;
+  onOpenMenuChatIdChange: (id: string | null) => void;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
@@ -440,6 +450,10 @@ function SidebarContent({
                       isActive={activeChatId === chat.id}
                       compact={compact}
                       canPin={canPin}
+                      menuOpen={openMenuChatId === chat.id}
+                      onMenuOpenChange={(open) =>
+                        onOpenMenuChatIdChange(open ? chat.id : null)
+                      }
                       onDelete={onDelete}
                       onRename={onRename}
                       onPin={onPin}
@@ -471,6 +485,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [identityKey, setIdentityKey] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const activeChatId = pathname.startsWith("/chat/")
@@ -654,6 +669,8 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
             identityKey={identityKey}
+            openMenuChatId={openMenuChatId}
+            onOpenMenuChatIdChange={setOpenMenuChatId}
           />
         </div>
       </aside>
@@ -685,6 +702,8 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onPin={handlePin}
             onReorder={handleReorder}
             identityKey={identityKey}
+            openMenuChatId={openMenuChatId}
+            onOpenMenuChatIdChange={setOpenMenuChatId}
           />
         </SheetContent>
       </Sheet>
