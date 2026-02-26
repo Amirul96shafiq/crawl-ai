@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -10,6 +11,7 @@ import { NewChatDialog } from "@/components/new-chat-dialog";
 import { UserMenu } from "@/components/user-menu";
 import { useAppearance } from "@/components/appearance-provider";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +41,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Trash2, Menu, Globe, X, PanelLeftClose, PanelLeft, Plus } from "lucide-react";
+import {
+  Trash2,
+  Menu,
+  Globe,
+  PanelLeftClose,
+  PanelLeft,
+  Plus,
+  MoreVertical,
+  Pencil,
+} from "lucide-react";
 
 const STORAGE_KEY_PREFIX = "chat-order-";
 
@@ -99,14 +110,22 @@ function SortableChatItem({
   isActive,
   compact,
   onDelete,
+  onRename,
   onNavigate,
 }: {
   chat: ChatItem;
   isActive: boolean;
   compact: boolean;
   onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
   onNavigate: (id: string) => void;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(chat.title || "New Chat");
+  const [pendingRename, setPendingRename] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const renameOnCloseRef = useRef(false);
+
   const {
     attributes,
     listeners,
@@ -115,6 +134,31 @@ function SortableChatItem({
     transition,
     isDragging,
   } = useSortable({ id: chat.id });
+
+  const startEditing = useCallback(() => {
+    setEditValue(chat.title || "New Chat");
+    setIsEditing(true);
+    setPendingRename(false);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
+    });
+  }, [chat.title]);
+
+  const saveRename = useCallback(() => {
+    const trimmed = editValue.trim() || "New Chat";
+    if (trimmed !== (chat.title || "New Chat")) {
+      onRename(chat.id, trimmed);
+    }
+    setIsEditing(false);
+  }, [chat.id, chat.title, editValue, onRename]);
+
+  const cancelEdit = useCallback(() => {
+    setEditValue(chat.title || "New Chat");
+    setIsEditing(false);
+  }, [chat.title]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -131,24 +175,77 @@ function SortableChatItem({
         isActive && "bg-accent",
         isDragging && "opacity-50 shadow-md z-50",
       )}
-      onClick={() => onNavigate(chat.id)}
+      onClick={() => !isEditing && onNavigate(chat.id)}
       {...attributes}
       {...listeners}
     >
-      <span className="flex-1 truncate">{chat.title || "New Chat"}</span>
-      <DropdownMenu>
+      {isEditing ? (
+        <Input
+          ref={inputRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={saveRename}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") saveRename();
+            if (e.key === "Escape") cancelEdit();
+            e.stopPropagation();
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="h-7 flex-1 min-w-0 text-sm"
+        />
+      ) : (
+        <span
+          className="flex-1 truncate"
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            startEditing();
+          }}
+        >
+          {chat.title || "New Chat"}
+        </span>
+      )}
+      <DropdownMenu
+        onOpenChange={(open) => {
+          if (!open && pendingRename) {
+            setPendingRename(false);
+            startEditing();
+          }
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+            className={cn(
+              "h-6 w-6 shrink-0",
+              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+            )}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <MoreVertical className="h-3.5 w-3.5" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="bottom">
+        <DropdownMenuContent
+          align="end"
+          side="bottom"
+          onCloseAutoFocus={(e) => {
+            if (renameOnCloseRef.current) {
+              renameOnCloseRef.current = false;
+              e.preventDefault();
+            }
+          }}
+        >
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              renameOnCloseRef.current = true;
+              setPendingRename(true);
+            }}
+          >
+            <Pencil />
+            Rename chat
+          </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
             onClick={(e) => {
@@ -158,10 +255,6 @@ function SortableChatItem({
           >
             <Trash2 />
             Delete chat
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-            <X />
-            Cancel
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -175,6 +268,7 @@ function SidebarContent({
   chats,
   activeChatId,
   onDelete,
+  onRename,
   onCollapse,
   onReorder,
   identityKey,
@@ -182,6 +276,7 @@ function SidebarContent({
   chats: ChatItem[];
   activeChatId: string | null;
   onDelete: (id: string) => void;
+  onRename: (id: string, title: string) => void;
   onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
   identityKey: string | null;
@@ -262,6 +357,7 @@ function SidebarContent({
                     isActive={activeChatId === chat.id}
                     compact={compact}
                     onDelete={onDelete}
+                    onRename={onRename}
                     onNavigate={(id) => router.push(`/chat/${id}`)}
                   />
                 ))}
@@ -341,6 +437,25 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
     }
   }
 
+  async function handleRename(id: string, title: string) {
+    const oldTitle = chats.find((c) => c.id === id)?.title || "New Chat";
+    try {
+      const res = await fetch(`/api/chats/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      if (res.ok) {
+        setChats((prev) =>
+          prev.map((c) => (c.id === id ? { ...c, title } : c)),
+        );
+        toast.success(`Renamed from "${oldTitle}" to "${title}"`);
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
   return (
     <>
       {/* Desktop sidebar */}
@@ -402,6 +517,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             chats={chats}
             activeChatId={activeChatId}
             onDelete={handleDelete}
+            onRename={handleRename}
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
             identityKey={identityKey}
@@ -432,6 +548,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             chats={chats}
             activeChatId={activeChatId}
             onDelete={handleDelete}
+            onRename={handleRename}
             onReorder={handleReorder}
             identityKey={identityKey}
           />

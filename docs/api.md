@@ -164,6 +164,39 @@ List all chats for the current user or guest.
 
 ---
 
+## PATCH /api/chats/[id]
+
+Update a chat's title.
+
+**Request Body:**
+
+```json
+{
+  "title": "New Chat Title"
+}
+```
+
+- `title` (required): New display title; string. Empty or whitespace-only is stored as `null`.
+
+**Logic:**
+
+1. Identify caller
+2. Verify ownership (chat belongs to the user or guest)
+3. Update chat title
+
+**Response:** `200 OK`
+
+```json
+{ "updated": true }
+```
+
+**Errors:**
+
+- `400` - Invalid JSON or missing/invalid title
+- `404` - Chat not found or not owned by caller
+
+---
+
 ## DELETE /api/chats/[id]
 
 Delete a chat and all its pages and messages (cascade).
