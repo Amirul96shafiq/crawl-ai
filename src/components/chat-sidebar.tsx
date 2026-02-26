@@ -110,19 +110,26 @@ function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
   const pinned = chats.filter((c) => c.pinnedAt);
   const unpinned = chats.filter((c) => !c.pinnedAt);
   if (orderedIds.length === 0) return chats;
-  const byId = new Map(unpinned.map((c) => [c.id, c]));
+  const pinnedById = new Map(pinned.map((c) => [c.id, c]));
+  const unpinnedById = new Map(unpinned.map((c) => [c.id, c]));
+  const orderedPinned: ChatItem[] = [];
   const orderedUnpinned: ChatItem[] = [];
   for (const id of orderedIds) {
-    const chat = byId.get(id);
-    if (chat) {
-      orderedUnpinned.push(chat);
-      byId.delete(id);
+    const p = pinnedById.get(id);
+    if (p) {
+      orderedPinned.push(p);
+      pinnedById.delete(id);
+    } else {
+      const u = unpinnedById.get(id);
+      if (u) {
+        orderedUnpinned.push(u);
+        unpinnedById.delete(id);
+      }
     }
   }
-  for (const chat of byId.values()) {
-    orderedUnpinned.push(chat);
-  }
-  return [...pinned, ...orderedUnpinned];
+  for (const chat of pinnedById.values()) orderedPinned.push(chat);
+  for (const chat of unpinnedById.values()) orderedUnpinned.push(chat);
+  return [...orderedPinned, ...orderedUnpinned];
 }
 
 function SortableChatItem({
