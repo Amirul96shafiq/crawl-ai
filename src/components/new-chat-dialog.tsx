@@ -234,7 +234,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
         )}
 
         {step === "links" && crawlResult && (
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0 overflow-hidden">
             <div className="rounded-lg border p-3 space-y-1">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Globe className="h-4 w-4" />
@@ -261,7 +261,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
                     className="pl-8 h-9"
                   />
                 </div>
-                <ScrollArea className="h-[200px] rounded-md border p-3">
+                <ScrollArea className="h-[200px] overflow-x-hidden rounded-md border p-3">
                   <div className="space-y-2">
                     {(() => {
                       const filtered = crawlResult.links.filter(
@@ -278,7 +278,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
                         filtered.map((link) => (
                       <label
                         key={link.url}
-                        className="flex items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
+                        className="flex min-w-0 items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
                       >
                         <Checkbox
                           checked={selectedLinks.has(link.url)}
