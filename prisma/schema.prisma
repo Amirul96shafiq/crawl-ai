@@ -29,12 +29,15 @@ model Chat {
   guestId   String?
   guest     Guest?     @relation(fields: [guestId], references: [id])
   title     String?
+  pinnedAt  DateTime?
   createdAt DateTime   @default(now())
   pages     ChatPage[]
   messages  Message[]
 
   @@index([userId])
   @@index([guestId])
+  @@index([userId, pinnedAt])
+  @@index([guestId, pinnedAt])
 }
 
 model ChatPage {

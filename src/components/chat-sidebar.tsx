@@ -58,6 +58,8 @@ import {
   Plus,
   MoreVertical,
   Pencil,
+  Pin,
+  PinOff,
 } from "lucide-react";
 
 const STORAGE_KEY_PREFIX = "chat-order-";
@@ -73,6 +75,7 @@ interface ChatItem {
   id: string;
   title: string | null;
   createdAt: string;
+  pinnedAt: string | null;
   pages: { url: string; title: string | null }[];
 }
 
@@ -104,35 +107,41 @@ function saveOrder(identityKey: string, orderedIds: string[]) {
 }
 
 function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
+  const pinned = chats.filter((c) => c.pinnedAt);
+  const unpinned = chats.filter((c) => !c.pinnedAt);
   if (orderedIds.length === 0) return chats;
-  const byId = new Map(chats.map((c) => [c.id, c]));
-  const result: ChatItem[] = [];
+  const byId = new Map(unpinned.map((c) => [c.id, c]));
+  const orderedUnpinned: ChatItem[] = [];
   for (const id of orderedIds) {
     const chat = byId.get(id);
     if (chat) {
-      result.push(chat);
+      orderedUnpinned.push(chat);
       byId.delete(id);
     }
   }
   for (const chat of byId.values()) {
-    result.push(chat);
+    orderedUnpinned.push(chat);
   }
-  return result;
+  return [...pinned, ...orderedUnpinned];
 }
 
 function SortableChatItem({
   chat,
   isActive,
   compact,
+  canPin,
   onDelete,
   onRename,
+  onPin,
   onNavigate,
 }: {
   chat: ChatItem;
   isActive: boolean;
   compact: boolean;
+  canPin: boolean;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
   onNavigate: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -211,16 +220,21 @@ function SortableChatItem({
           className="h-7 flex-1 min-w-0 text-sm"
         />
       ) : (
-        <span
-          className="flex-1 min-w-0 truncate"
-          title={chat.title || "New Chat"}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            startEditing();
-          }}
-        >
-          {truncateTitle(chat.title || "New Chat")}
-        </span>
+        <>
+          {chat.pinnedAt && (
+            <Pin className="h-3 w-3 shrink-0 text-muted-foreground" />
+          )}
+          <span
+            className="flex-1 min-w-0 truncate"
+            title={chat.title || "New Chat"}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              startEditing();
+            }}
+          >
+            {truncateTitle(chat.title || "New Chat")}
+          </span>
+        </>
       )}
       <DropdownMenu
         onOpenChange={(open) => {
@@ -254,6 +268,25 @@ function SortableChatItem({
             }
           }}
         >
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onPin(chat.id, !chat.pinnedAt);
+            }}
+            disabled={!chat.pinnedAt && !canPin}
+          >
+            {chat.pinnedAt ? (
+              <>
+                <PinOff />
+                Unpin chat
+              </>
+            ) : (
+              <>
+                <Pin />
+                Pin chat
+              </>
+            )}
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
               e.stopPropagation();
@@ -313,6 +346,7 @@ function SidebarContent({
   activeChatId,
   onDelete,
   onRename,
+  onPin,
   onCollapse,
   onReorder,
   identityKey,
@@ -321,6 +355,7 @@ function SidebarContent({
   activeChatId: string | null;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
   onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
   identityKey: string | null;
@@ -394,17 +429,24 @@ function SidebarContent({
                 items={chatIds}
                 strategy={verticalListSortingStrategy}
               >
-                {chats.map((chat) => (
-                  <SortableChatItem
-                    key={chat.id}
-                    chat={chat}
-                    isActive={activeChatId === chat.id}
-                    compact={compact}
-                    onDelete={onDelete}
-                    onRename={onRename}
-                    onNavigate={(id) => router.push(`/chat/${id}`)}
-                  />
-                ))}
+                {chats.map((chat) => {
+                  const pinnedCount = chats.filter((c) => c.pinnedAt).length;
+                  const maxPinned = user ? 5 : 1;
+                  const canPin = !!chat.pinnedAt || pinnedCount < maxPinned;
+                  return (
+                    <SortableChatItem
+                      key={chat.id}
+                      chat={chat}
+                      isActive={activeChatId === chat.id}
+                      compact={compact}
+                      canPin={canPin}
+                      onDelete={onDelete}
+                      onRename={onRename}
+                      onPin={onPin}
+                      onNavigate={(id) => router.push(`/chat/${id}`)}
+                    />
+                  );
+                })}
               </SortableContext>
             </DndContext>
           ) : null}
@@ -456,15 +498,22 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   }
 
   function handleReorder(orderedIds: string[]) {
+    const pinnedIds = new Set(
+      chats.filter((c) => c.pinnedAt).map((c) => c.id),
+    );
+    const orderedPinned = orderedIds.filter((id) => pinnedIds.has(id));
+    const orderedUnpinned = orderedIds.filter((id) => !pinnedIds.has(id));
+    const sanitizedIds = [...orderedPinned, ...orderedUnpinned];
+
     setChats((prev) => {
       const byId = new Map(prev.map((c) => [c.id, c]));
-      const reordered = orderedIds
+      const reordered = sanitizedIds
         .map((id) => byId.get(id))
         .filter(Boolean) as ChatItem[];
       const appended = prev.filter((c) => !orderedIds.includes(c.id));
       return reordered.length > 0 ? [...reordered, ...appended] : prev;
     });
-    if (identityKey) saveOrder(identityKey, orderedIds);
+    if (identityKey) saveOrder(identityKey, sanitizedIds);
   }
 
   async function handleDelete(id: string) {
@@ -498,6 +547,44 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
       }
     } catch {
       // silently fail
+    }
+  }
+
+  function sortChatsWithPinnedFirst(chats: ChatItem[]): ChatItem[] {
+    const pinned = chats.filter((c) => c.pinnedAt);
+    const unpinned = chats.filter((c) => !c.pinnedAt);
+    pinned.sort((a, b) => {
+      const aT = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0;
+      const bT = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0;
+      return aT - bT;
+    });
+    return [...pinned, ...unpinned];
+  }
+
+  async function handlePin(id: string, pinned: boolean) {
+    try {
+      const res = await fetch(`/api/chats/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pinned }),
+      });
+      if (res.ok) {
+        const updated = chats.map((c) =>
+          c.id === id
+            ? { ...c, pinnedAt: pinned ? new Date().toISOString() : null }
+            : c,
+        );
+        const sorted = sortChatsWithPinnedFirst(updated);
+        if (identityKey) saveOrder(identityKey, sorted.map((c) => c.id));
+        setChats(sorted);
+        await fetchChats();
+        toast.success(pinned ? "Chat pinned" : "Chat unpinned");
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to update pin");
+      }
+    } catch {
+      toast.error("Failed to update pin");
     }
   }
 
@@ -563,6 +650,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             activeChatId={activeChatId}
             onDelete={handleDelete}
             onRename={handleRename}
+            onPin={handlePin}
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
             identityKey={identityKey}
@@ -594,6 +682,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             activeChatId={activeChatId}
             onDelete={handleDelete}
             onRename={handleRename}
+            onPin={handlePin}
             onReorder={handleReorder}
             identityKey={identityKey}
           />

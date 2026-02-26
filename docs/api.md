@@ -148,6 +148,7 @@ List all chats for the current user or guest.
       "id": "chat_1",
       "title": "Understanding React Hooks",
       "createdAt": "2026-02-25T10:00:00Z",
+      "pinnedAt": "2026-02-26T08:00:00Z",
       "pages": [
         {
           "url": "https://example.com/react-hooks",
@@ -160,13 +161,15 @@ List all chats for the current user or guest.
 }
 ```
 
+- `pinnedAt`: ISO date when the chat was pinned, or `null` if not pinned. Pinned chats appear first in the list.
+
 - `identityKey`: Caller's user ID or guest ID; used by the client for localStorage-based chat ordering.
 
 ---
 
 ## PATCH /api/chats/[id]
 
-Update a chat's title.
+Update a chat's title or pin status.
 
 **Request Body:**
 
@@ -176,13 +179,23 @@ Update a chat's title.
 }
 ```
 
-- `title` (required): New display title; string. Empty or whitespace-only is stored as `null`.
+or
+
+```json
+{
+  "pinned": true
+}
+```
+
+- `title` (optional): New display title; string. Empty or whitespace-only is stored as `null`.
+- `pinned` (optional): Boolean. `true` to pin, `false` to unpin. Guests may pin 1 chat; users may pin up to 5.
 
 **Logic:**
 
 1. Identify caller
 2. Verify ownership (chat belongs to the user or guest)
-3. Update chat title
+3. If `pinned` is provided: validate limit (guest: 1, user: 5), then update `pinnedAt`
+4. If `title` is provided: update title
 
 **Response:** `200 OK`
 
@@ -192,7 +205,7 @@ Update a chat's title.
 
 **Errors:**
 
-- `400` - Invalid JSON or missing/invalid title
+- `400` - Invalid JSON, missing/invalid title, or pin limit exceeded
 - `404` - Chat not found or not owned by caller
 
 ---

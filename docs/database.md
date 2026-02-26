@@ -43,11 +43,14 @@ model Chat {
   guestId   String?
   guest     Guest?     @relation(fields: [guestId], references: [id])
   title     String?
+  pinnedAt  DateTime?
   createdAt DateTime   @default(now())
   pages     ChatPage[]
   messages  Message[]
 }
 ```
+
+- `pinnedAt`: When set, the chat is pinned and appears at the top of the sidebar. Guests may pin 1 chat; users may pin up to 5.
 
 **Ownership rules:**
 

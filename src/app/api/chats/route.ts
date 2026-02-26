@@ -20,6 +20,19 @@ export async function GET() {
     },
   });
 
+  chats.sort((a, b) => {
+    if (a.pinnedAt && !b.pinnedAt) return -1;
+    if (!a.pinnedAt && b.pinnedAt) return 1;
+    if (a.pinnedAt && b.pinnedAt) {
+      return (
+        new Date(a.pinnedAt).getTime() - new Date(b.pinnedAt).getTime()
+      );
+    }
+    return (
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  });
+
   return NextResponse.json({ chats, identityKey: caller.id });
 }
 
