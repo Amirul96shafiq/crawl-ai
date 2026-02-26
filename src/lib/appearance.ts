@@ -1,4 +1,4 @@
-export const COMPACT_STORAGE_KEY = "crawl-ai-compact";
+export const COMPACT_STORAGE_KEY = "echologue-compact";
 
 export function getCompactFromStorage(): boolean {
   if (typeof window === "undefined") return false;

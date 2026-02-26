@@ -17,7 +17,7 @@ export async function crawlUrl(url: string): Promise<CrawlResult> {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; CrawlChat/1.0; +https://crawlchat.app)",
+          "Mozilla/5.0 (compatible; Echologue/1.0; +https://echologue.app)",
         Accept: "text/html,application/xhtml+xml",
       },
     });

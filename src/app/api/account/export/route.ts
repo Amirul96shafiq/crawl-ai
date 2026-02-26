@@ -49,7 +49,7 @@ export async function GET() {
   return new NextResponse(JSON.stringify(exportData, null, 2), {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="crawlchat-export-${new Date().toISOString().slice(0, 10)}.json"`,
+      "Content-Disposition": `attachment; filename="echologue-export-${new Date().toISOString().slice(0, 10)}.json"`,
     },
   });
 }

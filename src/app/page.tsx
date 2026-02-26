@@ -12,7 +12,7 @@ export default function HomePage() {
           </div>
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">
-              Welcome to CrawlChat
+              Welcome to Echologue
             </h1>
             <p className="text-muted-foreground">
               Enter any webpage URL and ask AI questions about its content.

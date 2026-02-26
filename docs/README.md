@@ -1,4 +1,4 @@
-# Crawl AI - Project Documentation
+# Echologue - Project Documentation
 
 A ChatGPT-style web application where users can provide a website URL, the system crawls and extracts its content, and users can ask AI questions about that content via a streaming chat interface.
 

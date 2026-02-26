@@ -135,8 +135,8 @@ export function AuthDialog({
           </DialogTitle>
           <DialogDescription>
             {tab === "login"
-              ? "Log in to your CrawlChat account"
-              : "Get unlimited chats with CrawlChat"}
+              ? "Log in to your Echologue account"
+              : "Get unlimited chats with Echologue"}
           </DialogDescription>
         </DialogHeader>
 

@@ -1,9 +1,9 @@
 ---
-description: Project documentation reference for Crawl AI
+description: Project documentation reference for Echologue
 alwaysApply: true
 ---
 
-# Crawl AI - Project Context
+# Echologue - Project Context
 
 This is a Next.js 15 ChatGPT-style app where users chat with AI about crawled webpage content.
 

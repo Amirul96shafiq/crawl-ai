@@ -309,7 +309,7 @@ Export all user data (chats, pages, messages) as a JSON file. Authenticated user
 
 **Response:** `200 OK` with JSON attachment
 
-- Content-Disposition: `attachment; filename="crawlchat-export-YYYY-MM-DD.json"`
+- Content-Disposition: `attachment; filename="echologue-export-YYYY-MM-DD.json"`
 - Body: `{ exportedAt, user: { id, name, email, createdAt }, chats: [...] }`
 
 **Errors:**

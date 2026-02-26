@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     .map((p) => `--- Page: ${p.url} ---\n${p.content}`)
     .join("\n\n");
 
-  const systemMessage = `You are a helpful assistant named CrawlChat. Answer questions based on the following webpage contents. If the answer is not found in the provided content, say so clearly.
+  const systemMessage = `You are a helpful assistant named Echologue. Answer questions based on the following webpage contents. If the answer is not found in the provided content, say so clearly.
 
 ${pageContext}`;
 

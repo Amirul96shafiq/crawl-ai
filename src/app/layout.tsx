@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CrawlChat - Chat with any webpage",
+  title: "Echologue - Chat with your sources",
   description:
-    "Provide a URL and ask AI questions about its content. Powered by OpenAI.",
+    "Provide a source and ask AI questions about its content. Powered by OpenAI.",
 };
 
 export default function RootLayout({
