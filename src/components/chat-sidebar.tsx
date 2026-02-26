@@ -653,7 +653,36 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             </TooltipTrigger>
             <TooltipContent side="right">Expand sidebar</TooltipContent>
           </Tooltip>
-          <div className="mt-auto">
+          {collapsed && (() => {
+            const pinnedChats = chats.filter((c) => c.pinnedAt);
+            return pinnedChats.length > 0 ? (
+              <ScrollArea className="flex-1 min-h-0 w-full px-1">
+                <div className="flex flex-col items-center gap-1 py-2">
+                  {pinnedChats.map((chat) => (
+                    <Tooltip key={chat.id}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 shrink-0",
+                            activeChatId === chat.id && "bg-accent",
+                          )}
+                          onClick={() => router.push(`/chat/${chat.id}`)}
+                        >
+                          <Pin className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        {chat.title || "New Chat"}
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : null;
+          })()}
+          <div className="mt-auto shrink-0">
             <UserMenu user={user} guestRemaining={guestRemaining} collapsed />
           </div>
         </div>
