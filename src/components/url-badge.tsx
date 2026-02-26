@@ -16,7 +16,7 @@ export function UrlBadge({ pages }: UrlBadgeProps) {
   if (!pages.length) return null;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-nowrap gap-2 overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1 [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-1.5">
       {pages.map((page) => {
         const hostname = (() => {
           try {
@@ -36,7 +36,7 @@ export function UrlBadge({ pages }: UrlBadgeProps) {
               >
                 <Badge
                   variant="secondary"
-                  className="gap-1.5 max-w-[300px] truncate"
+                  className="gap-1.5 max-w-[300px] shrink-0 truncate"
                 >
                   <Globe className="h-3 w-3 shrink-0" />
                   <span className="truncate">
