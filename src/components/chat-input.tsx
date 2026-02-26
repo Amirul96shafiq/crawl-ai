@@ -46,7 +46,7 @@ export function ChatInput({
           size="icon"
           onClick={onSubmit}
           disabled={!input.trim() || isLoading}
-          className="shrink-0"
+          className="shrink-0 size-[44px]"
         >
           <SendHorizontal className="h-4 w-4" />
         </Button>
