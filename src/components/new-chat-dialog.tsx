@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2, Plus, Globe, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Globe, AlertCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface DiscoveredLink {
@@ -46,6 +46,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
   const [crawling, setCrawling] = useState(false);
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
+  const [linkSearch, setLinkSearch] = useState("");
   const [error, setError] = useState("");
   const [urlTouched, setUrlTouched] = useState(false);
 
@@ -70,6 +71,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
     setCrawling(false);
     setCrawlResult(null);
     setSelectedLinks(new Set());
+    setLinkSearch("");
     setError("");
     setUrlTouched(false);
   }
@@ -260,9 +262,30 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
                   Found {crawlResult.links.length} links — select up to 5 to
                   include:
                 </Label>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search links..."
+                    value={linkSearch}
+                    onChange={(e) => setLinkSearch(e.target.value)}
+                    className="pl-8 h-9"
+                  />
+                </div>
                 <ScrollArea className="h-[200px] rounded-md border p-3">
                   <div className="space-y-2">
-                    {crawlResult.links.map((link) => (
+                    {(() => {
+                      const filtered = crawlResult.links.filter(
+                        (link) =>
+                          !linkSearch.trim() ||
+                          link.text.toLowerCase().includes(linkSearch.toLowerCase()) ||
+                          link.url.toLowerCase().includes(linkSearch.toLowerCase())
+                      );
+                      return filtered.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                          No links match &quot;{linkSearch}&quot;
+                        </p>
+                      ) : (
+                        filtered.map((link) => (
                       <label
                         key={link.url}
                         className="flex items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
@@ -279,7 +302,9 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
                           </p>
                         </div>
                       </label>
-                    ))}
+                    ))
+                      );
+                    })()}
                   </div>
                 </ScrollArea>
                 {selectedLinks.size > 0 && (
