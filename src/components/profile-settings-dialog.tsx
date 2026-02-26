@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, AlertCircle, Trash2, Download } from "lucide-react";
+import { Loader2, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
@@ -55,7 +55,6 @@ export function ProfileSettingsDialog({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -66,7 +65,6 @@ export function ProfileSettingsDialog({
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setError("");
       setDeleteConfirm("");
     }
   }, [open]);
@@ -78,10 +76,7 @@ export function ProfileSettingsDialog({
   }, [open, user.name]);
 
   function handleOpenChange(value: boolean) {
-    if (!value) {
-      setError("");
-      setDeleteConfirm("");
-    }
+    if (!value) setDeleteConfirm("");
     onOpenChange(value);
   }
 
@@ -104,9 +99,8 @@ export function ProfileSettingsDialog({
 
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     if (deleteConfirm !== "delete") {
-      setError('Type "delete" to confirm account deletion');
+      toast.error('Type "delete" to confirm account deletion');
       return;
     }
     setDeleteLoading(true);
@@ -118,7 +112,7 @@ export function ProfileSettingsDialog({
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to delete account");
+        toast.error(data.error || "Failed to delete account");
         setDeleteLoading(false);
         return;
       }
@@ -126,7 +120,7 @@ export function ProfileSettingsDialog({
       const { signOut } = await import("next-auth/react");
       await signOut({ redirectTo: "/" });
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setDeleteLoading(false);
     }
@@ -134,20 +128,19 @@ export function ProfileSettingsDialog({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
 
     if (newPassword && newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      toast.error("New passwords do not match");
       return;
     }
 
     if (newPassword && newPassword.length < 8) {
-      setError("New password must be at least 8 characters");
+      toast.error("New password must be at least 8 characters");
       return;
     }
 
     if (newPassword && !currentPassword) {
-      setError("Current password is required to change password");
+      toast.error("Current password is required to change password");
       return;
     }
 
@@ -174,7 +167,7 @@ export function ProfileSettingsDialog({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Update failed");
+        toast.error(data.error || "Update failed");
         setLoading(false);
         return;
       }
@@ -185,7 +178,7 @@ export function ProfileSettingsDialog({
       setConfirmPassword("");
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -204,10 +197,7 @@ export function ProfileSettingsDialog({
         <div className="flex shrink-0 rounded-lg bg-muted p-1 mx-6 mb-4">
           <button
             type="button"
-            onClick={() => {
-              setTab("profile");
-              setError("");
-            }}
+            onClick={() => setTab("profile")}
             className={cn(
               "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               tab === "profile"
@@ -219,10 +209,7 @@ export function ProfileSettingsDialog({
           </button>
           <button
             type="button"
-            onClick={() => {
-              setTab("appearance");
-              setError("");
-            }}
+            onClick={() => setTab("appearance")}
             className={cn(
               "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               tab === "appearance"
@@ -234,10 +221,7 @@ export function ProfileSettingsDialog({
           </button>
           <button
             type="button"
-            onClick={() => {
-              setTab("account");
-              setError("");
-            }}
+            onClick={() => setTab("account")}
             className={cn(
               "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               tab === "account"
@@ -253,13 +237,6 @@ export function ProfileSettingsDialog({
         {tab === "profile" && (
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
-            {error && (
-              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                {error}
-              </div>
-            )}
-
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Username</h4>
               <div className="space-y-2">
@@ -409,12 +386,6 @@ export function ProfileSettingsDialog({
                 action cannot be undone.
               </p>
               <form onSubmit={handleDeleteAccount} className="space-y-3">
-                {error && (
-                  <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    {error}
-                  </div>
-                )}
                 <div className="space-y-2">
                   <Label htmlFor="account-delete-confirm">
                     Type &quot;delete&quot; to confirm

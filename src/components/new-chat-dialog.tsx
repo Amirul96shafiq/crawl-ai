@@ -47,7 +47,6 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
   const [crawlResult, setCrawlResult] = useState<CrawlResult | null>(null);
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
   const [linkSearch, setLinkSearch] = useState("");
-  const [error, setError] = useState("");
   const [urlTouched, setUrlTouched] = useState(false);
 
   const limitReached = guestRemaining === 0;
@@ -72,18 +71,16 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
     setCrawlResult(null);
     setSelectedLinks(new Set());
     setLinkSearch("");
-    setError("");
     setUrlTouched(false);
   }
 
   async function handleCrawl() {
-    setError("");
     if (!url.trim()) return;
 
     try {
       new URL(url);
     } catch {
-      setError("Please enter a valid URL");
+      toast.error("Please enter a valid URL");
       return;
     }
 
@@ -104,7 +101,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
       setCrawlResult(data);
       setStep("links");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to crawl URL");
+      toast.error(err instanceof Error ? err.message : "Failed to crawl URL");
     } finally {
       setCrawling(false);
     }
@@ -150,10 +147,11 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
       const data = await res.json();
       setOpen(false);
       reset();
+      toast.success("Chat created successfully");
       router.push(`/chat/${data.id}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create chat");
+      toast.error(err instanceof Error ? err.message : "Failed to create chat");
       setStep("links");
     }
   }
@@ -190,13 +188,6 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
           </DialogTitle>
         </DialogHeader>
 
-        {error && (
-          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            {error}
-          </div>
-        )}
-
         {step === "url" && (
           <div className="space-y-4">
             {limitReached && (
@@ -213,7 +204,6 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
                   onChange={(e) => {
                     setUrl(e.target.value);
                     if (!urlTouched) setUrlTouched(true);
-                    if (error) setError("");
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !urlInvalid && !limitReached) handleCrawl();
