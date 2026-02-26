@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,7 +21,27 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Trash2, Menu, Globe, X, PanelLeftClose, PanelLeft, Plus } from "lucide-react";
+
+const STORAGE_KEY_PREFIX = "chat-order-";
 
 interface ChatItem {
   id: string;
@@ -35,6 +55,120 @@ interface ChatSidebarProps {
   guestRemaining?: number;
 }
 
+function getStoredOrder(identityKey: string): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PREFIX + identityKey);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrder(identityKey: string, orderedIds: string[]) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(
+      STORAGE_KEY_PREFIX + identityKey,
+      JSON.stringify(orderedIds),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
+  if (orderedIds.length === 0) return chats;
+  const byId = new Map(chats.map((c) => [c.id, c]));
+  const result: ChatItem[] = [];
+  for (const id of orderedIds) {
+    const chat = byId.get(id);
+    if (chat) {
+      result.push(chat);
+      byId.delete(id);
+    }
+  }
+  for (const chat of byId.values()) {
+    result.push(chat);
+  }
+  return result;
+}
+
+function SortableChatItem({
+  chat,
+  isActive,
+  compact,
+  onDelete,
+  onNavigate,
+}: {
+  chat: ChatItem;
+  isActive: boolean;
+  compact: boolean;
+  onDelete: (id: string) => void;
+  onNavigate: (id: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: chat.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group flex items-center gap-2 rounded-lg text-sm cursor-grab active:cursor-grabbing hover:bg-accent transition-colors",
+        compact ? "px-2 py-0.5" : "px-3 py-1",
+        isActive && "bg-accent",
+        isDragging && "opacity-50 shadow-md z-50",
+      )}
+      onClick={() => onNavigate(chat.id)}
+      {...attributes}
+      {...listeners}
+    >
+      <span className="flex-1 truncate">{chat.title || "New Chat"}</span>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="bottom">
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(chat.id);
+            }}
+          >
+            <Trash2 />
+            Delete chat
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+            <X />
+            Cancel
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 function SidebarContent({
   user,
   guestRemaining,
@@ -42,14 +176,39 @@ function SidebarContent({
   activeChatId,
   onDelete,
   onCollapse,
+  onReorder,
+  identityKey,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
   onDelete: (id: string) => void;
   onCollapse?: () => void;
+  onReorder?: (orderedIds: string[]) => void;
+  identityKey: string | null;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !onReorder) return;
+    const oldIndex = chats.findIndex((c) => c.id === active.id);
+    const newIndex = chats.findIndex((c) => c.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(chats, oldIndex, newIndex);
+    onReorder(reordered.map((c) => c.id));
+  };
+
+  const chatIds = useMemo(() => chats.map((c) => c.id), [chats]);
 
   return (
     <div className="flex h-full flex-col">
@@ -85,49 +244,30 @@ function SidebarContent({
             compact ? "p-1" : "p-2",
           )}
         >
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className={cn(
-                "group flex items-center gap-2 rounded-lg text-sm cursor-pointer hover:bg-accent transition-colors",
-                compact ? "px-2 py-0.5" : "px-3 py-1",
-                activeChatId === chat.id && "bg-accent",
-              )}
-              onClick={() => router.push(`/chat/${chat.id}`)}
+          {chats.length > 0 ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+              modifiers={[restrictToVerticalAxis]}
             >
-              <span className="flex-1 truncate">
-                {chat.title || "New Chat"}
-              </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="bottom">
-                  <DropdownMenuItem
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(chat.id);
-                    }}
-                  >
-                    <Trash2 />
-                    Delete chat
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
-                    <X />
-                    Cancel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))}
+              <SortableContext
+                items={chatIds}
+                strategy={verticalListSortingStrategy}
+              >
+                {chats.map((chat) => (
+                  <SortableChatItem
+                    key={chat.id}
+                    chat={chat}
+                    isActive={activeChatId === chat.id}
+                    compact={compact}
+                    onDelete={onDelete}
+                    onNavigate={(id) => router.push(`/chat/${id}`)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : null}
           {chats.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -147,6 +287,7 @@ function SidebarContent({
 
 export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
+  const [identityKey, setIdentityKey] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -163,11 +304,27 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
       const res = await fetch("/api/chats");
       if (res.ok) {
         const data = await res.json();
-        setChats(data.chats);
+        const rawChats = data.chats as ChatItem[];
+        const key = data.identityKey as string | undefined;
+        if (key) setIdentityKey(key);
+        const orderedIds = key ? getStoredOrder(key) : [];
+        setChats(applyOrder(rawChats, orderedIds));
       }
     } catch {
       // silently fail
     }
+  }
+
+  function handleReorder(orderedIds: string[]) {
+    setChats((prev) => {
+      const byId = new Map(prev.map((c) => [c.id, c]));
+      const reordered = orderedIds
+        .map((id) => byId.get(id))
+        .filter(Boolean) as ChatItem[];
+      const appended = prev.filter((c) => !orderedIds.includes(c.id));
+      return reordered.length > 0 ? [...reordered, ...appended] : prev;
+    });
+    if (identityKey) saveOrder(identityKey, orderedIds);
   }
 
   async function handleDelete(id: string) {
@@ -246,6 +403,8 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             activeChatId={activeChatId}
             onDelete={handleDelete}
             onCollapse={() => setCollapsed(true)}
+            onReorder={handleReorder}
+            identityKey={identityKey}
           />
         </div>
       </aside>
@@ -273,6 +432,8 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             chats={chats}
             activeChatId={activeChatId}
             onDelete={handleDelete}
+            onReorder={handleReorder}
+            identityKey={identityKey}
           />
         </SheetContent>
       </Sheet>

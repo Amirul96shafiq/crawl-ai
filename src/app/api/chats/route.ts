@@ -20,7 +20,7 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({ chats });
+  return NextResponse.json({ chats, identityKey: caller.id });
 }
 
 export async function POST(request: Request) {

@@ -155,9 +155,12 @@ List all chats for the current user or guest.
         }
       ]
     }
-  ]
+  ],
+  "identityKey": "user_or_guest_id"
 }
 ```
+
+- `identityKey`: Caller's user ID or guest ID; used by the client for localStorage-based chat ordering.
 
 ---
 
