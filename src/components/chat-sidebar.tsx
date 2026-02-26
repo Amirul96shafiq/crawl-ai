@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NewChatDialog } from "@/components/new-chat-dialog";
@@ -352,6 +353,8 @@ function SortableChatItem({
   );
 }
 
+const CHATS_PAGE_SIZE = 30;
+
 function SidebarContent({
   user,
   guestRemaining,
@@ -366,6 +369,11 @@ function SidebarContent({
   identityKey,
   openMenuChatId,
   onOpenMenuChatIdChange,
+  scrollAreaRef,
+  sentinelRef,
+  hasMore,
+  loadingMore,
+  onLoadMore,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
@@ -378,9 +386,30 @@ function SidebarContent({
   identityKey: string | null;
   openMenuChatId: string | null;
   onOpenMenuChatIdChange: (id: string | null) => void;
+  scrollAreaRef: React.RefObject<HTMLDivElement | null>;
+  sentinelRef: React.RefObject<HTMLDivElement | null>;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore?: () => void;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
+
+  useEffect(() => {
+    const scrollArea = scrollAreaRef.current;
+    const sentinel = sentinelRef.current;
+    if (!scrollArea || !sentinel || !hasMore || loadingMore || !onLoadMore) return;
+    const viewport = scrollArea.querySelector("[data-slot=scroll-area-viewport]");
+    if (!viewport) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore && !loadingMore) onLoadMore();
+      },
+      { root: viewport, rootMargin: "100px", threshold: 0 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [scrollAreaRef, sentinelRef, hasMore, loadingMore, onLoadMore]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -430,7 +459,11 @@ function SidebarContent({
         )}
       </div>
       <Separator />
-      <ScrollArea className="flex-1 min-h-0 min-w-0 overflow-hidden">
+      <div
+        ref={scrollAreaRef}
+        className="flex-1 min-h-0 min-w-0 overflow-hidden [&_[data-slot=scroll-area]]:h-full"
+      >
+      <ScrollArea className="h-full">
         <div
           className={cn(
             "space-y-1 min-w-0",
@@ -473,6 +506,21 @@ function SidebarContent({
               </SortableContext>
             </DndContext>
           ) : null}
+          {loadingMore &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`skeleton-${i}`}
+                className={cn(
+                  "flex items-center gap-2 rounded-lg min-w-0",
+                  compact ? "px-2 py-0.5" : "px-3 py-1",
+                )}
+              >
+                <Skeleton className="h-4 flex-1 min-w-0 rounded" />
+              </div>
+            ))}
+          {chats.length > 0 && hasMore && (
+            <div ref={sentinelRef} className="h-4 shrink-0" />
+          )}
           {chats.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -482,6 +530,7 @@ function SidebarContent({
           )}
         </div>
       </ScrollArea>
+      </div>
       <Separator />
       <div className={compact ? "p-2" : "p-3"}>
         <UserMenu user={user} guestRemaining={guestRemaining} />
@@ -493,8 +542,14 @@ function SidebarContent({
 export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [identityKey, setIdentityKey] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const chatsLengthRef = useRef(0);
+  chatsLengthRef.current = chats.length;
   const pathname = usePathname();
   const router = useRouter();
   const activeChatId = pathname.startsWith("/chat/")
@@ -502,24 +557,38 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
     : null;
 
   useEffect(() => {
-    fetchChats();
+    fetchChats(false);
   }, [user?.email]);
 
-  async function fetchChats() {
+  const fetchChats = useCallback(async (append: boolean) => {
     try {
-      const res = await fetch("/api/chats");
+      const skip = append ? chatsLengthRef.current : 0;
+      const res = await fetch(
+        `/api/chats?limit=${CHATS_PAGE_SIZE}&skip=${skip}`,
+      );
       if (res.ok) {
         const data = await res.json();
         const rawChats = data.chats as ChatItem[];
         const key = data.identityKey as string | undefined;
+        const more = data.hasMore as boolean;
         if (key) setIdentityKey(key);
         const orderedIds = key ? getStoredOrder(key) : [];
-        setChats(applyOrder(rawChats, orderedIds));
+        const ordered = applyOrder(rawChats, orderedIds);
+        setChats((prev) => (append ? [...prev, ...ordered] : ordered));
+        setHasMore(more);
       }
     } catch {
       // silently fail
+    } finally {
+      setLoadingMore(false);
     }
-  }
+  }, []);
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    fetchChats(true);
+  }, [loadingMore, hasMore, fetchChats]);
 
   function handleReorder(orderedIds: string[]) {
     const pinnedIds = new Set(
@@ -601,7 +670,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
         const sorted = sortChatsWithPinnedFirst(updated);
         if (identityKey) saveOrder(identityKey, sorted.map((c) => c.id));
         setChats(sorted);
-        await fetchChats();
+        await fetchChats(false);
         toast.success(pinned ? "Chat pinned" : "Chat unpinned");
       } else {
         const data = await res.json();
@@ -706,10 +775,15 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onPin={handlePin}
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
-            onChatCreated={fetchChats}
+            onChatCreated={() => fetchChats(false)}
             identityKey={identityKey}
             openMenuChatId={openMenuChatId}
             onOpenMenuChatIdChange={setOpenMenuChatId}
+            scrollAreaRef={scrollAreaRef}
+            sentinelRef={sentinelRef}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
           />
         </div>
       </aside>
@@ -740,10 +814,15 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onRename={handleRename}
             onPin={handlePin}
             onReorder={handleReorder}
-            onChatCreated={fetchChats}
+            onChatCreated={() => fetchChats(false)}
             identityKey={identityKey}
             openMenuChatId={openMenuChatId}
             onOpenMenuChatIdChange={setOpenMenuChatId}
+            scrollAreaRef={scrollAreaRef}
+            sentinelRef={sentinelRef}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
           />
         </SheetContent>
       </Sheet>

@@ -4,7 +4,10 @@ import { getCallerIdentity, checkGuestRateLimit } from "@/lib/guest";
 import { crawlUrl } from "@/lib/crawl";
 import { MAX_SUB_LINKS_PER_CHAT } from "@/lib/constants";
 
-export async function GET() {
+const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 50;
+
+export async function GET(request: Request) {
   const caller = await getCallerIdentity();
 
   const where =
@@ -12,28 +15,37 @@ export async function GET() {
       ? { userId: caller.id }
       : { guestId: caller.id };
 
-  const chats = await prisma.chat.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: {
-      pages: { select: { url: true, title: true } },
-    },
-  });
+  const { searchParams } = new URL(request.url);
+  const limit = Math.min(
+    parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
+    MAX_LIMIT,
+  );
+  const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10) || 0, 0);
 
-  chats.sort((a, b) => {
-    if (a.pinnedAt && !b.pinnedAt) return -1;
-    if (!a.pinnedAt && b.pinnedAt) return 1;
-    if (a.pinnedAt && b.pinnedAt) {
-      return (
-        new Date(a.pinnedAt).getTime() - new Date(b.pinnedAt).getTime()
-      );
-    }
-    return (
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  });
+  const [pinned, unpinned] = await Promise.all([
+    prisma.chat.findMany({
+      where: { ...where, pinnedAt: { not: null } },
+      orderBy: { pinnedAt: "asc" },
+      include: { pages: { select: { url: true, title: true } } },
+    }),
+    prisma.chat.findMany({
+      where: { ...where, pinnedAt: null },
+      orderBy: { createdAt: "desc" },
+      include: { pages: { select: { url: true, title: true } } },
+    }),
+  ]);
 
-  return NextResponse.json({ chats, identityKey: caller.id });
+  const all = [...pinned, ...unpinned];
+  const total = all.length;
+  const chats = all.slice(skip, skip + limit);
+  const hasMore = skip + chats.length < total;
+
+  return NextResponse.json({
+    chats,
+    identityKey: caller.id,
+    hasMore,
+    total,
+  });
 }
 
 export async function POST(request: Request) {
