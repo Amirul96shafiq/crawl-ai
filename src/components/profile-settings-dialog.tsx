@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { useAppearance } from "@/components/appearance-provider";
 import { Checkbox } from "@/components/ui/checkbox";
 
-type SettingsTab = "profile" | "appearance";
+type SettingsTab = "profile" | "appearance" | "account";
 
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
@@ -57,6 +57,8 @@ export function ProfileSettingsDialog({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -65,6 +67,7 @@ export function ProfileSettingsDialog({
       setNewPassword("");
       setConfirmPassword("");
       setError("");
+      setDeleteConfirm("");
     }
   }, [open]);
 
@@ -77,8 +80,56 @@ export function ProfileSettingsDialog({
   function handleOpenChange(value: boolean) {
     if (!value) {
       setError("");
+      setDeleteConfirm("");
     }
     onOpenChange(value);
+  }
+
+  async function handleExport() {
+    try {
+      const res = await fetch("/api/account/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `crawlchat-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Data exported successfully");
+    } catch {
+      toast.error("Failed to export data");
+    }
+  }
+
+  async function handleDeleteAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (deleteConfirm !== "delete") {
+      setError('Type "delete" to confirm account deletion');
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      const res = await fetch("/api/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation: deleteConfirm }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to delete account");
+        setDeleteLoading(false);
+        return;
+      }
+      onOpenChange(false);
+      const { signOut } = await import("next-auth/react");
+      await signOut({ redirectTo: "/" });
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setDeleteLoading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -153,7 +204,10 @@ export function ProfileSettingsDialog({
         <div className="flex shrink-0 rounded-lg bg-muted p-1 mx-6 mb-4">
           <button
             type="button"
-            onClick={() => setTab("profile")}
+            onClick={() => {
+              setTab("profile");
+              setError("");
+            }}
             className={cn(
               "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               tab === "profile"
@@ -165,7 +219,10 @@ export function ProfileSettingsDialog({
           </button>
           <button
             type="button"
-            onClick={() => setTab("appearance")}
+            onClick={() => {
+              setTab("appearance");
+              setError("");
+            }}
             className={cn(
               "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
               tab === "appearance"
@@ -174,6 +231,21 @@ export function ProfileSettingsDialog({
             )}
           >
             Appearance
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setTab("account");
+              setError("");
+            }}
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
+              tab === "account"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Account
           </button>
         </div>
 
@@ -307,6 +379,68 @@ export function ProfileSettingsDialog({
               <p className="text-xs text-muted-foreground">
                 Reduce spacing in chat for a denser layout
               </p>
+            </div>
+          </div>
+        )}
+
+        {tab === "account" && (
+          <div className="space-y-6 overflow-y-auto px-6 pb-6">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Export data</h4>
+              <p className="text-xs text-muted-foreground">
+                Download all your chats, pages, and messages as a JSON file.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExport}
+                className="w-full gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export my data
+              </Button>
+            </div>
+            <div className="space-y-3 pt-3 border-t">
+              <h4 className="text-sm font-medium text-destructive">
+                Delete account
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Permanently delete your account and all associated data. This
+                action cannot be undone.
+              </p>
+              <form onSubmit={handleDeleteAccount} className="space-y-3">
+                {error && (
+                  <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="account-delete-confirm">
+                    Type &quot;delete&quot; to confirm
+                  </Label>
+                  <Input
+                    id="account-delete-confirm"
+                    placeholder="delete"
+                    value={deleteConfirm}
+                    onChange={(e) => setDeleteConfirm(e.target.value)}
+                    className="border-destructive/50"
+                    autoComplete="off"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  className="w-full gap-2"
+                  disabled={deleteConfirm !== "delete" || deleteLoading}
+                >
+                  {deleteLoading && (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  )}
+                  <Trash2 className="h-4 w-4" />
+                  Delete my account
+                </Button>
+              </form>
             </div>
           </div>
         )}

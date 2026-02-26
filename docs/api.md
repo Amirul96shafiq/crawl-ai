@@ -254,6 +254,56 @@ Update the authenticated user's profile (name and/or password).
 
 ---
 
+## GET /api/account/export
+
+Export all user data (chats, pages, messages) as a JSON file. Authenticated users only.
+
+**Response:** `200 OK` with JSON attachment
+
+- Content-Disposition: `attachment; filename="crawlchat-export-YYYY-MM-DD.json"`
+- Body: `{ exportedAt, user: { id, name, email, createdAt }, chats: [...] }`
+
+**Errors:**
+
+- `401` - Not authenticated
+- `404` - User not found
+
+---
+
+## DELETE /api/account
+
+Permanently delete the authenticated user's account and all associated data. Requires confirmation.
+
+**Request Body:**
+
+```json
+{
+  "confirmation": "delete"
+}
+```
+
+- `confirmation` (required): Must be exactly `"delete"` to confirm
+
+**Logic:**
+
+1. Require authenticated session
+2. Validate confirmation string
+3. Delete all user chats (cascades to pages and messages)
+4. Delete user record
+
+**Response:** `200 OK`
+
+```json
+{ "deleted": true }
+```
+
+**Errors:**
+
+- `401` - Not authenticated
+- `400` - Invalid or missing confirmation
+
+---
+
 ## NextAuth Routes (automatic)
 
 Handled by NextAuth.js v5 catch-all route at `src/app/api/auth/[...nextauth]/route.ts`:
