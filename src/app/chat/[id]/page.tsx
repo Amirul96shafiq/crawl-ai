@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
@@ -7,6 +8,37 @@ import { ChatView } from "@/components/chat-view";
 
 interface ChatPageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: ChatPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const session = await auth();
+  const cookieStore = await cookies();
+  const guestId = cookieStore.get(GUEST_COOKIE_NAME)?.value;
+
+  const ownerWhere = session?.user?.id
+    ? { userId: session.user.id }
+    : guestId
+      ? { guestId }
+      : null;
+
+  if (!ownerWhere) {
+    return { title: "Echologue - Chat with your sources" };
+  }
+
+  const chat = await prisma.chat.findFirst({
+    where: { id, ...ownerWhere },
+    select: { title: true },
+  });
+
+  if (!chat) {
+    return { title: "Echologue - Chat with your sources" };
+  }
+
+  const chatTitle = chat.title?.trim() || "New Chat";
+  return {
+    title: `${chatTitle} - Echologue`,
+  };
 }
 
 export default async function ChatPage({ params }: ChatPageProps) {
