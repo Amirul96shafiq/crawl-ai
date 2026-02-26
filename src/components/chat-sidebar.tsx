@@ -430,7 +430,7 @@ function SidebarContent({
         )}
       </div>
       <Separator />
-      <ScrollArea className="flex-1 min-w-0">
+      <ScrollArea className="flex-1 min-h-0 min-w-0 overflow-hidden">
         <div
           className={cn(
             "space-y-1 min-w-0",
