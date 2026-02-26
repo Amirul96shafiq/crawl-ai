@@ -142,15 +142,15 @@ export function ProfileSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[400px] gap-0">
-        <DialogHeader className="pb-4">
+      <DialogContent className="sm:max-w-[400px] flex flex-col gap-0 p-0">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
             Manage your account preferences
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex rounded-lg bg-muted p-1 mb-4">
+        <div className="flex shrink-0 rounded-lg bg-muted p-1 mx-6 mb-4">
           <button
             type="button"
             onClick={() => setTab("profile")}
@@ -177,79 +177,82 @@ export function ProfileSettingsDialog({
           </button>
         </div>
 
+        <div className="flex flex-col h-[min(400px,55vh)] shrink-0 min-h-0">
         {tab === "profile" && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium">Username</h4>
-            <div className="space-y-2">
-              <Label htmlFor="profile-name">Display name</Label>
-              <Input
-                id="profile-name"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Username</h4>
+              <div className="space-y-2">
+                <Label htmlFor="profile-name">Display name</Label>
+                <Input
+                  id="profile-name"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-email" className="text-muted-foreground">
+                  Email (read-only)
+                </Label>
+                <Input
+                  id="profile-email"
+                  type="email"
+                  value={user.email ?? ""}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-email" className="text-muted-foreground">
-                Email (read-only)
-              </Label>
-              <Input
-                id="profile-email"
-                type="email"
-                value={user.email ?? ""}
-                disabled
-                className="bg-muted"
-              />
+
+            <div className="space-y-3 pt-3 border-t">
+              <h4 className="text-sm font-medium">Password</h4>
+              <div className="space-y-2">
+                <Label htmlFor="profile-current-password">Current password</Label>
+                <Input
+                  id="profile-current-password"
+                  type="password"
+                  placeholder="Enter current password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-new-password">New password</Label>
+                <Input
+                  id="profile-new-password"
+                  type="password"
+                  placeholder="Min 8 characters"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="profile-confirm-password">Confirm new password</Label>
+                <Input
+                  id="profile-confirm-password"
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3 pt-3 border-t">
-            <h4 className="text-sm font-medium">Password</h4>
-            <div className="space-y-2">
-              <Label htmlFor="profile-current-password">Current password</Label>
-              <Input
-                id="profile-current-password"
-                type="password"
-                placeholder="Enter current password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-new-password">New password</Label>
-              <Input
-                id="profile-new-password"
-                type="password"
-                placeholder="Min 8 characters"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                autoComplete="new-password"
-                minLength={8}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-confirm-password">Confirm new password</Label>
-              <Input
-                id="profile-confirm-password"
-                type="password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full shrink-0 mt-4" disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             Save changes
           </Button>
@@ -257,7 +260,7 @@ export function ProfileSettingsDialog({
         )}
 
         {tab === "appearance" && (
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-y-auto px-6 pb-6">
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Theme</h4>
               <div className="flex gap-2">
@@ -307,6 +310,7 @@ export function ProfileSettingsDialog({
             </div>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
