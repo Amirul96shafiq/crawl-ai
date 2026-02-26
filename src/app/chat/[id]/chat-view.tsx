@@ -55,7 +55,10 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
       <div className="px-4 py-3 md:pl-4 pl-14">
         <UrlBadge pages={pages} />
       </div>
-      <ChatMessages messages={displayMessages} isLoading={isLoading} />
+      <ChatMessages
+        messages={displayMessages}
+        isLoading={isLoading}
+      />
       <ChatInput
         input={input}
         onChange={setInput}

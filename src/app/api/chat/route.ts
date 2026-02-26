@@ -1,4 +1,4 @@
-import { streamText } from "ai";
+import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
@@ -37,31 +37,70 @@ ${pageContext}`;
 
   const isFirstExchange = chat.messages.length === 0;
 
-  // Extract last user message text from the UI messages format
   const lastUserMsg = [...messages].reverse().find(
     (m: { role: string }) => m.role === "user",
   );
   const lastUserContent = extractTextFromMessage(lastUserMsg);
 
-  const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system: systemMessage,
-    messages,
-    onFinish: async ({ text }) => {
-      await prisma.message.createMany({
-        data: [
-          { chatId, role: "user", content: lastUserContent },
-          { chatId, role: "assistant", content: text },
-        ],
-      });
-
-      if (isFirstExchange) {
-        generateTitle(chatId, lastUserContent).catch(() => {});
-      }
-    },
+  await prisma.message.create({
+    data: { chatId, role: "user", content: lastUserContent },
   });
 
-  return result.toUIMessageStreamResponse();
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !apiKey.startsWith("sk-") || apiKey.length < 20) {
+    const errorText = "OpenAI API key is not configured. Please add a valid OPENAI_API_KEY to your environment variables.";
+    await prisma.message.create({
+      data: { chatId, role: "assistant", content: errorText },
+    });
+    const textId = "error-msg";
+    return createUIMessageStreamResponse({
+      stream: createUIMessageStream({
+        execute: ({ writer }) => {
+          writer.write({ type: "text-start", id: textId });
+          writer.write({ type: "text-delta", delta: errorText, id: textId });
+          writer.write({ type: "text-end", id: textId });
+        },
+      }),
+    });
+  }
+
+  try {
+    const result = streamText({
+      model: openai("gpt-4o-mini"),
+      system: systemMessage,
+      messages,
+      onError: ({ error }) => {
+        console.error("Stream error:", error);
+      },
+      onFinish: async ({ text }) => {
+        await prisma.message.create({
+          data: { chatId, role: "assistant", content: text },
+        });
+
+        if (isFirstExchange) {
+          generateTitle(chatId, lastUserContent).catch(() => {});
+        }
+      },
+    });
+
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("Chat API error:", error);
+    const errorText = "Something went wrong while generating a response. Please try again later.";
+    await prisma.message.create({
+      data: { chatId, role: "assistant", content: errorText },
+    });
+    const textId = "error-msg";
+    return createUIMessageStreamResponse({
+      stream: createUIMessageStream({
+        execute: ({ writer }) => {
+          writer.write({ type: "text-start", id: textId });
+          writer.write({ type: "text-delta", delta: errorText, id: textId });
+          writer.write({ type: "text-end", id: textId });
+        },
+      }),
+    });
+  }
 }
 
 function extractTextFromMessage(msg: Record<string, unknown> | undefined): string {

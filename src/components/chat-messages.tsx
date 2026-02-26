@@ -30,6 +30,8 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
     );
   }
 
+  const lastMessage = messages[messages.length - 1];
+
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
       <div className="mx-auto max-w-3xl space-y-6">
@@ -58,7 +60,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
             </div>
           </div>
         ))}
-        {isLoading && messages[messages.length - 1]?.role === "user" && (
+        {isLoading && lastMessage?.role === "user" && (
           <div className="flex gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Bot className="h-4 w-4" />
