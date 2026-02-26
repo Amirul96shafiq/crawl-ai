@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -17,17 +18,38 @@ import {
 import { AuthDialog } from "@/components/auth-dialog";
 import { ProfileSettingsDialog } from "@/components/profile-settings-dialog";
 import { LogOut, Settings, User as UserIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
   user: { name?: string | null; email?: string | null } | null;
   guestRemaining?: number;
   collapsed?: boolean;
+  initialLoading?: boolean;
 }
 
-export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
+export function UserMenu({
+  user,
+  guestRemaining,
+  collapsed,
+  initialLoading = false,
+}: UserMenuProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  if (initialLoading) {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-2 min-w-0",
+          collapsed ? "justify-center" : "px-2",
+        )}
+      >
+        <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+        {!collapsed && <Skeleton className="h-4 flex-1 min-w-0 rounded" />}
+      </div>
+    );
+  }
 
   if (user) {
     const initials = (user.name || user.email || "U")

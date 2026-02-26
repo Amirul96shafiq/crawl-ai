@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import { GUEST_COOKIE_NAME, GUEST_DAILY_CHAT_LIMIT } from "@/lib/constants";
-import { ChatSidebar } from "@/components/chat-sidebar";
+import { ShellWithNavigation } from "@/components/shell-with-navigation";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -29,11 +29,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     : null;
 
   return (
-    <div className="flex h-screen">
-      <ChatSidebar user={user} guestRemaining={guestRemaining} />
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        {children}
-      </main>
-    </div>
+    <ShellWithNavigation user={user} guestRemaining={guestRemaining}>
+      {children}
+    </ShellWithNavigation>
   );
 }

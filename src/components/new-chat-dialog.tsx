@@ -19,6 +19,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, Plus, Globe, AlertCircle, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -228,10 +229,26 @@ export function NewChatDialog({ children, guestRemaining, onChatCreated }: NewCh
                 </p>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              We&apos;ll extract the main content from the page so you can ask
-              questions about it.
-            </p>
+            {crawling && (
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <Skeleton className="h-4 w-4/5 rounded" />
+                </div>
+                <Skeleton className="h-3 w-24 rounded" />
+                <div className="space-y-2 pt-2">
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-full rounded" />
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                </div>
+              </div>
+            )}
+            {!crawling && (
+              <p className="text-xs text-muted-foreground">
+                We&apos;ll extract the main content from the page so you can ask
+                questions about it.
+              </p>
+            )}
           </div>
         )}
 

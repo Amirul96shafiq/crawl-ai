@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NewChatDialog } from "@/components/new-chat-dialog";
 import { UserMenu } from "@/components/user-menu";
 import { useAppearance } from "@/components/appearance-provider";
+import { useNavigationLoading } from "@/components/navigation-loading-context";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -375,6 +376,7 @@ function SidebarContent({
   hasMore,
   loadingMore,
   onLoadMore,
+  initialLoading = false,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
@@ -392,9 +394,22 @@ function SidebarContent({
   hasMore: boolean;
   loadingMore: boolean;
   onLoadMore?: () => void;
+  initialLoading?: boolean;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
+  const navLoading = useNavigationLoading();
+
+  const handleNavigateToChat = useCallback(
+    (id: string) => {
+      if (navLoading?.navigateToChat) {
+        navLoading.navigateToChat(id);
+      } else {
+        router.push(`/chat/${id}`);
+      }
+    },
+    [navLoading, router],
+  );
 
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
@@ -509,7 +524,7 @@ function SidebarContent({
                               onDelete={onDelete}
                               onRename={onRename}
                               onPin={onPin}
-                              onNavigate={(id) => router.push(`/chat/${id}`)}
+                              onNavigate={handleNavigateToChat}
                             />
                           ))}
                         </div>
@@ -539,7 +554,7 @@ function SidebarContent({
                               onDelete={onDelete}
                               onRename={onRename}
                               onPin={onPin}
-                              onNavigate={(id) => router.push(`/chat/${id}`)}
+                              onNavigate={handleNavigateToChat}
                             />
                           );
                         })}
@@ -573,7 +588,7 @@ function SidebarContent({
                 compact ? "p-1" : "p-2",
               )}
             >
-              {loadingMore &&
+              {(initialLoading || loadingMore) &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={`skeleton-${i}`}
@@ -585,7 +600,7 @@ function SidebarContent({
                     <Skeleton className="h-4 flex-1 min-w-0 rounded" />
                   </div>
                 ))}
-              {chats.length === 0 && (
+              {chats.length === 0 && !initialLoading && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No chats yet</p>
@@ -598,7 +613,11 @@ function SidebarContent({
       </div>
       <Separator />
       <div className={compact ? "p-2" : "p-3"}>
-        <UserMenu user={user} guestRemaining={guestRemaining} />
+        <UserMenu
+          user={user}
+          guestRemaining={guestRemaining}
+          initialLoading={initialLoading}
+        />
       </div>
     </div>
   );
@@ -609,6 +628,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   const [identityKey, setIdentityKey] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
@@ -617,6 +637,19 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   chatsLengthRef.current = chats.length;
   const pathname = usePathname();
   const router = useRouter();
+  const navLoading = useNavigationLoading();
+
+  const handleNavigateToChat = useCallback(
+    (id: string) => {
+      if (navLoading?.navigateToChat) {
+        navLoading.navigateToChat(id);
+      } else {
+        router.push(`/chat/${id}`);
+      }
+    },
+    [navLoading, router],
+  );
+
   const activeChatId = pathname.startsWith("/chat/")
     ? pathname.split("/")[2]
     : null;
@@ -626,6 +659,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
   }, [user?.email]);
 
   const fetchChats = useCallback(async (append: boolean) => {
+    if (!append) setInitialLoading(true);
     try {
       const skip = append ? chatsLengthRef.current : 0;
       const res = await fetch(
@@ -645,6 +679,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
     } catch {
       // silently fail
     } finally {
+      if (!append) setInitialLoading(false);
       setLoadingMore(false);
     }
   }, []);
@@ -812,7 +847,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
                             "h-8 w-8 shrink-0",
                             activeChatId === chat.id && "bg-accent",
                           )}
-                          onClick={() => router.push(`/chat/${chat.id}`)}
+                          onClick={() => handleNavigateToChat(chat.id)}
                         >
                           <Pin className="h-4 w-4 text-muted-foreground" />
                         </Button>
@@ -827,7 +862,12 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             ) : null;
           })()}
           <div className="mt-auto shrink-0">
-            <UserMenu user={user} guestRemaining={guestRemaining} collapsed />
+            <UserMenu
+              user={user}
+              guestRemaining={guestRemaining}
+              collapsed
+              initialLoading={initialLoading}
+            />
           </div>
         </div>
 
@@ -859,6 +899,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             hasMore={hasMore}
             loadingMore={loadingMore}
             onLoadMore={loadMore}
+            initialLoading={initialLoading}
           />
         </div>
       </aside>
@@ -898,6 +939,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             hasMore={hasMore}
             loadingMore={loadingMore}
             onLoadMore={loadMore}
+            initialLoading={initialLoading}
           />
         </SheetContent>
       </Sheet>
