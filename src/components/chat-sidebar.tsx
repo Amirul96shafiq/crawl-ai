@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -440,6 +441,11 @@ function SidebarContent({
           compact ? "p-2" : "p-3",
         )}
       >
+        <Button size="icon" className="h-9 w-9 shrink-0" asChild>
+          <Link href="/" aria-label="Go to home">
+            <span className="text-sm font-semibold">E</span>
+          </Link>
+        </Button>
         <div className="flex-1">
           <NewChatDialog guestRemaining={guestRemaining} onChatCreated={onChatCreated} />
         </div>
@@ -758,6 +764,16 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
               : "opacity-0 pointer-events-none",
           )}
         >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                <Link href="/" aria-label="Go to home">
+                  <span className="text-xs font-semibold">E</span>
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Go to home</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <NewChatDialog guestRemaining={guestRemaining}>

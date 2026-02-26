@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppearanceProvider } from "@/components/appearance-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AppearanceProvider>
           <TooltipProvider>
-            {children}
+            <AppShell>{children}</AppShell>
             <ThemeToggle />
             <Toaster />
           </TooltipProvider>
