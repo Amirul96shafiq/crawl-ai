@@ -461,75 +461,134 @@ function SidebarContent({
       <Separator />
       <div
         ref={scrollAreaRef}
-        className="flex-1 min-h-0 min-w-0 overflow-hidden [&_[data-slot=scroll-area]]:h-full"
+        className="flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden"
       >
-      <ScrollArea className="h-full">
-        <div
-          className={cn(
-            "space-y-1 min-w-0",
-            compact ? "p-1" : "p-2",
-          )}
-        >
-          {chats.length > 0 ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-              modifiers={[restrictToVerticalAxis]}
+        {chats.length > 0 ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            modifiers={[restrictToVerticalAxis]}
+          >
+            <SortableContext
+              items={chatIds}
+              strategy={verticalListSortingStrategy}
             >
-              <SortableContext
-                items={chatIds}
-                strategy={verticalListSortingStrategy}
-              >
-                {chats.map((chat) => {
-                  const pinnedCount = chats.filter((c) => c.pinnedAt).length;
-                  const maxPinned = user ? 5 : 1;
-                  const canPin = !!chat.pinnedAt || pinnedCount < maxPinned;
-                  return (
-                    <SortableChatItem
-                      key={chat.id}
-                      chat={chat}
-                      isActive={activeChatId === chat.id}
-                      compact={compact}
-                      canPin={canPin}
-                      menuOpen={openMenuChatId === chat.id}
-                      onMenuOpenChange={(open) =>
-                        onOpenMenuChatIdChange(open ? chat.id : null)
-                      }
-                      onDelete={onDelete}
-                      onRename={onRename}
-                      onPin={onPin}
-                      onNavigate={(id) => router.push(`/chat/${id}`)}
-                    />
-                  );
-                })}
-              </SortableContext>
-            </DndContext>
-          ) : null}
-          {loadingMore &&
-            Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={`skeleton-${i}`}
-                className={cn(
-                  "flex items-center gap-2 rounded-lg min-w-0",
-                  compact ? "px-2 py-0.5" : "px-3 py-1",
-                )}
-              >
-                <Skeleton className="h-4 flex-1 min-w-0 rounded" />
-              </div>
-            ))}
-          {chats.length > 0 && hasMore && (
-            <div ref={sentinelRef} className="h-4 shrink-0" />
-          )}
-          {chats.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No chats yet</p>
-              <p className="text-xs mt-1">Enter a URL to get started</p>
+              {(() => {
+                const pinnedChats = chats.filter((c) => c.pinnedAt);
+                const unpinnedChats = chats.filter((c) => !c.pinnedAt);
+                const pinnedCount = pinnedChats.length;
+                const maxPinned = user ? 5 : 1;
+                return (
+                  <>
+                    {pinnedChats.length > 0 && (
+                      <div
+                        className={cn(
+                          "shrink-0 border-b border-border/50 bg-card",
+                          compact ? "p-1" : "p-2 pb-1",
+                        )}
+                      >
+                        <div className={cn("space-y-1", compact ? "space-y-0.5" : "")}>
+                          {pinnedChats.map((chat) => (
+                            <SortableChatItem
+                              key={chat.id}
+                              chat={chat}
+                              isActive={activeChatId === chat.id}
+                              compact={compact}
+                              canPin={true}
+                              menuOpen={openMenuChatId === chat.id}
+                              onMenuOpenChange={(open) =>
+                                onOpenMenuChatIdChange(open ? chat.id : null)
+                              }
+                              onDelete={onDelete}
+                              onRename={onRename}
+                              onPin={onPin}
+                              onNavigate={(id) => router.push(`/chat/${id}`)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <ScrollArea className="flex-1 min-h-0">
+                      <div
+                        className={cn(
+                          "space-y-1 min-w-0",
+                          compact ? "p-1" : "p-2",
+                        )}
+                      >
+                        {unpinnedChats.map((chat) => {
+                          const canPin =
+                            !!chat.pinnedAt || pinnedCount < maxPinned;
+                          return (
+                            <SortableChatItem
+                              key={chat.id}
+                              chat={chat}
+                              isActive={activeChatId === chat.id}
+                              compact={compact}
+                              canPin={canPin}
+                              menuOpen={openMenuChatId === chat.id}
+                              onMenuOpenChange={(open) =>
+                                onOpenMenuChatIdChange(open ? chat.id : null)
+                              }
+                              onDelete={onDelete}
+                              onRename={onRename}
+                              onPin={onPin}
+                              onNavigate={(id) => router.push(`/chat/${id}`)}
+                            />
+                          );
+                        })}
+                        {loadingMore &&
+                          Array.from({ length: 6 }).map((_, i) => (
+                            <div
+                              key={`skeleton-${i}`}
+                              className={cn(
+                                "flex items-center gap-2 rounded-lg min-w-0",
+                                compact ? "px-2 py-0.5" : "px-3 py-1",
+                              )}
+                            >
+                              <Skeleton className="h-4 flex-1 min-w-0 rounded" />
+                            </div>
+                          ))}
+                        {chats.length > 0 && hasMore && (
+                          <div ref={sentinelRef} className="h-4 shrink-0" />
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </>
+                );
+              })()}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <ScrollArea className="flex-1 min-h-0">
+            <div
+              className={cn(
+                "space-y-1 min-w-0",
+                compact ? "p-1" : "p-2",
+              )}
+            >
+              {loadingMore &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={`skeleton-${i}`}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg min-w-0",
+                      compact ? "px-2 py-0.5" : "px-3 py-1",
+                    )}
+                  >
+                    <Skeleton className="h-4 flex-1 min-w-0 rounded" />
+                  </div>
+                ))}
+              {chats.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No chats yet</p>
+                  <p className="text-xs mt-1">Enter a URL to get started</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </ScrollArea>
+          </ScrollArea>
+        )}
       </div>
       <Separator />
       <div className={compact ? "p-2" : "p-3"}>
