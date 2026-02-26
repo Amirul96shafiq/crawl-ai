@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { AuthDialog } from "@/components/auth-dialog";
 import { ProfileSettingsDialog } from "@/components/profile-settings-dialog";
-import { LogOut, Settings, User as UserIcon } from "lucide-react";
+import { Archive, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
@@ -85,6 +86,12 @@ export function UserMenu({
           <TooltipContent side="right">Account menu</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem asChild>
+            <Link href="/archive">
+              <Archive className="h-4 w-4 mr-2" />
+              Archived Chats
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
@@ -146,6 +153,13 @@ export function UserMenu({
             {guestRemaining}/3 chats remaining today
           </p>
         )}
+        <Link
+          href="/archive"
+          className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-accent"
+        >
+          <Archive className="h-3.5 w-3.5" />
+          Archived chats
+        </Link>
         <div className="flex gap-2">
           <Button
             variant="outline"

@@ -11,6 +11,35 @@ const getWhere = (id: string, caller: { type: string; id: string }) =>
     ? { id, userId: caller.id }
     : { id, guestId: caller.id };
 
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const caller = await getCallerIdentity();
+  const where = getWhere(id, caller);
+  const chat = await prisma.chat.findFirst({
+    where,
+    include: {
+      pages: { select: { url: true, title: true } },
+      messages: { orderBy: { createdAt: "asc" } },
+    },
+  });
+  if (!chat) {
+    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+  }
+  return NextResponse.json({
+    id: chat.id,
+    title: chat.title,
+    pages: chat.pages,
+    messages: chat.messages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+    })),
+  });
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -19,7 +48,7 @@ export async function PATCH(
     const { id } = await params;
     const caller = await getCallerIdentity();
 
-    let body: { title?: string; pinned?: boolean };
+    let body: { title?: string; pinned?: boolean; archived?: boolean };
     try {
       body = await request.json();
     } catch {
@@ -29,7 +58,28 @@ export async function PATCH(
       );
     }
 
-    const { title, pinned } = body;
+    const { title, pinned, archived } = body;
+
+    if (typeof archived === "boolean") {
+      const where = getWhere(id, caller);
+      const chat = await prisma.chat.findFirst({ where });
+
+      if (!chat) {
+        return NextResponse.json(
+          { error: "Chat not found" },
+          { status: 404 },
+        );
+      }
+
+      await prisma.chat.update({
+        where: { id },
+        data: {
+          archivedAt: archived ? new Date() : null,
+          ...(archived === false && { createdAt: new Date() }),
+        },
+      });
+      return NextResponse.json({ updated: true });
+    }
 
     if (typeof pinned === "boolean") {
       const where = getWhere(id, caller);
@@ -48,6 +98,7 @@ export async function PATCH(
             ? { userId: caller.id }
             : { guestId: caller.id }),
           pinnedAt: { not: null },
+          archivedAt: null,
         },
       });
 

@@ -53,6 +53,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Archive,
   Trash2,
   Menu,
   Globe,
@@ -131,8 +132,8 @@ function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
     }
   }
   for (const chat of pinnedById.values()) orderedPinned.push(chat);
-  for (const chat of unpinnedById.values()) orderedUnpinned.push(chat);
-  return [...orderedPinned, ...orderedUnpinned];
+  const remainingUnpinned = [...unpinnedById.values()];
+  return [...orderedPinned, ...remainingUnpinned, ...orderedUnpinned];
 }
 
 function SortableChatItem({
@@ -145,6 +146,7 @@ function SortableChatItem({
   onDelete,
   onRename,
   onPin,
+  onArchive,
   onNavigate,
 }: {
   chat: ChatItem;
@@ -156,6 +158,7 @@ function SortableChatItem({
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onPin: (id: string, pinned: boolean) => void;
+  onArchive: (id: string) => void;
   onNavigate: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -314,6 +317,15 @@ function SortableChatItem({
             Rename chat
           </DropdownMenuItem>
           <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              onArchive(chat.id);
+            }}
+          >
+            <Archive />
+            Archive chat
+          </DropdownMenuItem>
+          <DropdownMenuItem
             variant="destructive"
             onSelect={() => {
               setDeleteConfirmOpen(true);
@@ -365,6 +377,7 @@ function SidebarContent({
   onDelete,
   onRename,
   onPin,
+  onArchive,
   onCollapse,
   onReorder,
   onChatCreated,
@@ -383,6 +396,7 @@ function SidebarContent({
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onPin: (id: string, pinned: boolean) => void;
+  onArchive: (id: string) => void;
   onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
   onChatCreated?: () => void;
@@ -524,6 +538,7 @@ function SidebarContent({
                               onDelete={onDelete}
                               onRename={onRename}
                               onPin={onPin}
+                              onArchive={onArchive}
                               onNavigate={handleNavigateToChat}
                             />
                           ))}
@@ -554,6 +569,7 @@ function SidebarContent({
                               onDelete={onDelete}
                               onRename={onRename}
                               onPin={onPin}
+                              onArchive={onArchive}
                               onNavigate={handleNavigateToChat}
                             />
                           );
@@ -654,10 +670,6 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
     ? pathname.split("/")[2]
     : null;
 
-  useEffect(() => {
-    fetchChats(false);
-  }, [user?.email]);
-
   const fetchChats = useCallback(async (append: boolean) => {
     if (!append) setInitialLoading(true);
     try {
@@ -683,6 +695,27 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
       setLoadingMore(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchChats(false);
+  }, [user?.email, fetchChats]);
+
+  const prevPathRef = useRef(pathname);
+  useEffect(() => {
+    if (
+      prevPathRef.current.startsWith("/archive") &&
+      !pathname.startsWith("/archive")
+    ) {
+      fetchChats(false);
+    }
+    prevPathRef.current = pathname;
+  }, [pathname, fetchChats]);
+
+  useEffect(() => {
+    const handler = () => fetchChats(false);
+    window.addEventListener("chat-restored", handler);
+    return () => window.removeEventListener("chat-restored", handler);
+  }, [fetchChats]);
 
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
@@ -721,6 +754,29 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
       }
     } catch {
       // silently fail
+    }
+  }
+
+  async function handleArchive(id: string) {
+    try {
+      const res = await fetch(`/api/chats/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ archived: true }),
+      });
+      if (res.ok) {
+        setChats((prev) => prev.filter((c) => c.id !== id));
+        if (identityKey) {
+          const orderedIds = getStoredOrder(identityKey).filter((cid) => cid !== id);
+          saveOrder(identityKey, orderedIds);
+        }
+        if (activeChatId === id) {
+          router.push("/");
+        }
+        toast.success("Chat archived");
+      }
+    } catch {
+      toast.error("Failed to archive chat");
     }
   }
 
@@ -888,6 +944,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onDelete={handleDelete}
             onRename={handleRename}
             onPin={handlePin}
+            onArchive={handleArchive}
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
             onChatCreated={() => fetchChats(false)}
@@ -929,6 +986,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onDelete={handleDelete}
             onRename={handleRename}
             onPin={handlePin}
+            onArchive={handleArchive}
             onReorder={handleReorder}
             onChatCreated={() => fetchChats(false)}
             identityKey={identityKey}

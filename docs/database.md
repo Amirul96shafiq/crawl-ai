@@ -51,6 +51,7 @@ model Chat {
 ```
 
 - `pinnedAt`: When set, the chat is pinned and appears at the top of the sidebar. Guests may pin 1 chat; users may pin up to 5.
+- `archivedAt`: When set, the chat is archived (soft-deleted) and hidden from the sidebar. Data is preserved.
 
 **Ownership rules:**
 

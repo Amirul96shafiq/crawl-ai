@@ -23,21 +23,24 @@ model Guest {
 }
 
 model Chat {
-  id        String     @id @default(cuid())
-  userId    String?
-  user      User?      @relation(fields: [userId], references: [id])
-  guestId   String?
-  guest     Guest?     @relation(fields: [guestId], references: [id])
-  title     String?
-  pinnedAt  DateTime?
-  createdAt DateTime   @default(now())
-  pages     ChatPage[]
-  messages  Message[]
+  id         String     @id @default(cuid())
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id])
+  guestId    String?
+  guest      Guest?     @relation(fields: [guestId], references: [id])
+  title      String?
+  pinnedAt   DateTime?
+  archivedAt DateTime?
+  createdAt  DateTime   @default(now())
+  pages      ChatPage[]
+  messages   Message[]
 
   @@index([userId])
   @@index([guestId])
   @@index([userId, pinnedAt])
   @@index([guestId, pinnedAt])
+  @@index([userId, archivedAt])
+  @@index([guestId, archivedAt])
 }
 
 model ChatPage {

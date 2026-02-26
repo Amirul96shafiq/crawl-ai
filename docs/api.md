@@ -163,6 +163,8 @@ List all chats for the current user or guest.
 
 - `pinnedAt`: ISO date when the chat was pinned, or `null` if not pinned. Pinned chats appear first in the list.
 
+- `archived` (query): When `archived=true`, returns archived chats (soft-deleted) ordered by `archivedAt` desc. Default is active chats only.
+
 - `identityKey`: Caller's user ID or guest ID; used by the client for localStorage-based chat ordering.
 
 ---
@@ -194,8 +196,9 @@ or
 
 1. Identify caller
 2. Verify ownership (chat belongs to the user or guest)
-3. If `pinned` is provided: validate limit (guest: 1, user: 5), then update `pinnedAt`
-4. If `title` is provided: update title
+3. If `archived` is provided: set `archivedAt` (soft-delete) or clear it
+4. If `pinned` is provided: validate limit (guest: 1, user: 5), then update `pinnedAt`
+5. If `title` is provided: update title
 
 **Response:** `200 OK`
 

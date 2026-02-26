@@ -120,7 +120,7 @@
 
 - Lists all chats with auto-generated titles, ordered by most recent
 - Active chat highlighted
-- Chat dot menu (⋮) with Rename and Delete; menu visible on hover or when chat is selected
+- Chat dot menu (⋮) with Rename, Archive, and Delete; menu visible on hover or when chat is selected
 - Inline rename: double-click title or use Rename from menu
 - Bottom section: guest badge with usage count ("2/3 chats today") or user avatar + name + logout
 

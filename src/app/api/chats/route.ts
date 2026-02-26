@@ -8,44 +8,67 @@ const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 50;
 
 export async function GET(request: Request) {
-  const caller = await getCallerIdentity();
+  try {
+    const caller = await getCallerIdentity();
 
-  const where =
-    caller.type === "user"
-      ? { userId: caller.id }
-      : { guestId: caller.id };
+    const where =
+      caller.type === "user"
+        ? { userId: caller.id }
+        : { guestId: caller.id };
 
-  const { searchParams } = new URL(request.url);
-  const limit = Math.min(
-    parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
-    MAX_LIMIT,
-  );
-  const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10) || 0, 0);
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(
+      parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
+      MAX_LIMIT,
+    );
+    const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10) || 0, 0);
+    const archived = searchParams.get("archived") === "true";
 
-  const [pinned, unpinned] = await Promise.all([
-    prisma.chat.findMany({
-      where: { ...where, pinnedAt: { not: null } },
-      orderBy: { pinnedAt: "asc" },
-      include: { pages: { select: { url: true, title: true } } },
-    }),
-    prisma.chat.findMany({
-      where: { ...where, pinnedAt: null },
-      orderBy: { createdAt: "desc" },
-      include: { pages: { select: { url: true, title: true } } },
-    }),
-  ]);
+    const baseWhere = archived
+      ? { ...where, archivedAt: { not: null } }
+      : { ...where, archivedAt: null };
 
-  const all = [...pinned, ...unpinned];
-  const total = all.length;
-  const chats = all.slice(skip, skip + limit);
-  const hasMore = skip + chats.length < total;
+    let all: Awaited<ReturnType<typeof prisma.chat.findMany>>;
+    if (archived) {
+      all = await prisma.chat.findMany({
+        where: baseWhere,
+        orderBy: { archivedAt: "desc" },
+        include: { pages: { select: { url: true, title: true } } },
+      });
+    } else {
+      const [pinned, unpinned] = await Promise.all([
+        prisma.chat.findMany({
+          where: { ...baseWhere, pinnedAt: { not: null } },
+          orderBy: { pinnedAt: "asc" },
+          include: { pages: { select: { url: true, title: true } } },
+        }),
+        prisma.chat.findMany({
+          where: { ...baseWhere, pinnedAt: null },
+          orderBy: { createdAt: "desc" },
+          include: { pages: { select: { url: true, title: true } } },
+        }),
+      ]);
+      all = [...pinned, ...unpinned];
+    }
+    const total = all.length;
+    const chats = all.slice(skip, skip + limit);
+    const hasMore = skip + chats.length < total;
 
-  return NextResponse.json({
-    chats,
-    identityKey: caller.id,
-    hasMore,
-    total,
-  });
+    return NextResponse.json({
+      chats,
+      identityKey: caller.id,
+      hasMore,
+      total,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
+    console.error("[GET /api/chats]", err);
+    return NextResponse.json(
+      { error: message },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
