@@ -13,6 +13,14 @@ import { useAppearance } from "@/components/appearance-provider";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,6 +61,13 @@ import {
 } from "lucide-react";
 
 const STORAGE_KEY_PREFIX = "chat-order-";
+const MAX_CHAT_TITLE_LENGTH = 28;
+
+function truncateTitle(title: string, maxLen: number = MAX_CHAT_TITLE_LENGTH): string {
+  const t = title.trim();
+  if (t.length <= maxLen) return t;
+  return t.slice(0, maxLen).trim() + "...";
+}
 
 interface ChatItem {
   id: string;
@@ -121,6 +136,7 @@ function SortableChatItem({
   onNavigate: (id: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [editValue, setEditValue] = useState(chat.title || "New Chat");
   const [pendingRename, setPendingRename] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -136,7 +152,7 @@ function SortableChatItem({
   } = useSortable({ id: chat.id });
 
   const startEditing = useCallback(() => {
-    setEditValue(chat.title || "New Chat");
+    setEditValue((chat.title || "New Chat").slice(0, MAX_CHAT_TITLE_LENGTH));
     setIsEditing(true);
     setPendingRename(false);
     requestAnimationFrame(() => {
@@ -148,7 +164,7 @@ function SortableChatItem({
   }, [chat.title]);
 
   const saveRename = useCallback(() => {
-    const trimmed = editValue.trim() || "New Chat";
+    const trimmed = (editValue.trim() || "New Chat").slice(0, MAX_CHAT_TITLE_LENGTH);
     if (trimmed !== (chat.title || "New Chat")) {
       onRename(chat.id, trimmed);
     }
@@ -170,7 +186,7 @@ function SortableChatItem({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group flex items-center gap-2 rounded-lg text-sm cursor-grab active:cursor-grabbing hover:bg-accent transition-colors",
+        "group flex items-center gap-2 rounded-lg text-sm cursor-grab active:cursor-grabbing hover:bg-accent transition-colors min-w-0 overflow-hidden",
         compact ? "px-2 py-0.5" : "px-3 py-1",
         isActive && "bg-accent",
         isDragging && "opacity-50 shadow-md z-50",
@@ -183,7 +199,8 @@ function SortableChatItem({
         <Input
           ref={inputRef}
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          maxLength={MAX_CHAT_TITLE_LENGTH}
+          onChange={(e) => setEditValue(e.target.value.slice(0, MAX_CHAT_TITLE_LENGTH))}
           onBlur={saveRename}
           onKeyDown={(e) => {
             if (e.key === "Enter") saveRename();
@@ -195,13 +212,14 @@ function SortableChatItem({
         />
       ) : (
         <span
-          className="flex-1 truncate"
+          className="flex-1 min-w-0 truncate"
+          title={chat.title || "New Chat"}
           onDoubleClick={(e) => {
             e.stopPropagation();
             startEditing();
           }}
         >
-          {chat.title || "New Chat"}
+          {truncateTitle(chat.title || "New Chat")}
         </span>
       )}
       <DropdownMenu
@@ -248,9 +266,8 @@ function SortableChatItem({
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(chat.id);
+            onSelect={() => {
+              setDeleteConfirmOpen(true);
             }}
           >
             <Trash2 />
@@ -258,6 +275,33 @@ function SortableChatItem({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Delete chat?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this chat? This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                onDelete(chat.id);
+                setDeleteConfirmOpen(false);
+              }}
+            >
+              Yes, delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -332,10 +376,10 @@ function SidebarContent({
         )}
       </div>
       <Separator />
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-w-0">
         <div
           className={cn(
-            "space-y-1",
+            "space-y-1 min-w-0",
             compact ? "p-1" : "p-2",
           )}
         >
@@ -431,6 +475,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
         if (activeChatId === id) {
           router.push("/");
         }
+        toast.success("Chat deleted");
       }
     } catch {
       // silently fail
