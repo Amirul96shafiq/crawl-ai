@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NewChatDialog } from "@/components/new-chat-dialog";
 import { UserMenu } from "@/components/user-menu";
+import { useAppearance } from "@/components/appearance-provider";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -48,10 +49,16 @@ function SidebarContent({
   onCollapse?: () => void;
 }) {
   const router = useRouter();
+  const { compact } = useAppearance();
 
   return (
     <div className="flex h-full flex-col">
-      <div className="p-3 flex items-center gap-2">
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          compact ? "p-2" : "p-3",
+        )}
+      >
         <div className="flex-1">
           <NewChatDialog guestRemaining={guestRemaining} />
         </div>
@@ -72,12 +79,18 @@ function SidebarContent({
       </div>
       <Separator />
       <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
+        <div
+          className={cn(
+            "space-y-1",
+            compact ? "p-1" : "p-2",
+          )}
+        >
           {chats.map((chat) => (
             <div
               key={chat.id}
               className={cn(
-                "group flex items-center gap-2 rounded-lg px-3 py-1 text-sm cursor-pointer hover:bg-accent transition-colors",
+                "group flex items-center gap-2 rounded-lg text-sm cursor-pointer hover:bg-accent transition-colors",
+                compact ? "px-2 py-0.5" : "px-3 py-1",
                 activeChatId === chat.id && "bg-accent",
               )}
               onClick={() => router.push(`/chat/${chat.id}`)}
@@ -125,7 +138,7 @@ function SidebarContent({
         </div>
       </ScrollArea>
       <Separator />
-      <div className="p-3">
+      <div className={compact ? "p-2" : "p-3"}>
         <UserMenu user={user} guestRemaining={guestRemaining} />
       </div>
     </div>

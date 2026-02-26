@@ -5,7 +5,9 @@ import { DefaultChatTransport } from "ai";
 import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
+import { useAppearance } from "@/components/appearance-provider";
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ChatViewProps {
   chatId: string;
@@ -15,6 +17,7 @@ interface ChatViewProps {
 
 export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
   const [input, setInput] = useState("");
+  const { compact } = useAppearance();
 
   const transport = useMemo(
     () => new DefaultChatTransport({ api: "/api/chat", body: { chatId } }),
@@ -52,7 +55,12 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 md:pl-4 pl-14">
+      <div
+        className={cn(
+          "md:pl-4 pl-14",
+          compact ? "px-2 py-2" : "px-4 py-3",
+        )}
+      >
         <UrlBadge pages={pages} />
       </div>
       <ChatMessages messages={displayMessages} isLoading={isLoading} />

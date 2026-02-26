@@ -1,0 +1,308 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
+import { useTheme } from "next-themes";
+import { Sun, Moon, Monitor } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useAppearance } from "@/components/appearance-provider";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type SettingsTab = "profile" | "appearance";
+
+const themes = ["light", "dark", "system"] as const;
+type Theme = (typeof themes)[number];
+
+function ThemeIcon({ theme }: { theme: Theme }) {
+  switch (theme) {
+    case "light":
+      return <Sun className="h-4 w-4" />;
+    case "dark":
+      return <Moon className="h-4 w-4" />;
+    case "system":
+      return <Monitor className="h-4 w-4" />;
+  }
+}
+
+interface ProfileSettingsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  user: { name?: string | null; email?: string | null };
+}
+
+export function ProfileSettingsDialog({
+  open,
+  onOpenChange,
+  user,
+}: ProfileSettingsDialogProps) {
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const { compact, setCompact } = useAppearance();
+  const [tab, setTab] = useState<SettingsTab>("profile");
+  const [name, setName] = useState(user.name ?? "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setName(user.name ?? "");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setError("");
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      setName(user.name ?? "");
+    }
+  }, [open, user.name]);
+
+  function handleOpenChange(value: boolean) {
+    if (!value) {
+      setError("");
+    }
+    onOpenChange(value);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (newPassword && newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+
+    if (newPassword && newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+
+    if (newPassword && !currentPassword) {
+      setError("Current password is required to change password");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const body: {
+        name?: string | null;
+        currentPassword?: string;
+        newPassword?: string;
+      } = { name: name.trim() || null };
+
+      if (newPassword) {
+        body.currentPassword = currentPassword;
+        body.newPassword = newPassword;
+      }
+
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Update failed");
+        setLoading(false);
+        return;
+      }
+
+      toast.success("Profile updated successfully");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[400px] gap-0">
+        <DialogHeader className="pb-4">
+          <DialogTitle>Settings</DialogTitle>
+          <DialogDescription>
+            Manage your account preferences
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex rounded-lg bg-muted p-1 mb-4">
+          <button
+            type="button"
+            onClick={() => setTab("profile")}
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
+              tab === "profile"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Profile
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("appearance")}
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
+              tab === "appearance"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Appearance
+          </button>
+        </div>
+
+        {tab === "profile" && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">Username</h4>
+            <div className="space-y-2">
+              <Label htmlFor="profile-name">Display name</Label>
+              <Input
+                id="profile-name"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-email" className="text-muted-foreground">
+                Email (read-only)
+              </Label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={user.email ?? ""}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-3 border-t">
+            <h4 className="text-sm font-medium">Password</h4>
+            <div className="space-y-2">
+              <Label htmlFor="profile-current-password">Current password</Label>
+              <Input
+                id="profile-current-password"
+                type="password"
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-new-password">New password</Label>
+              <Input
+                id="profile-new-password"
+                type="password"
+                placeholder="Min 8 characters"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="profile-confirm-password">Confirm new password</Label>
+              <Input
+                id="profile-confirm-password"
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Save changes
+          </Button>
+        </form>
+        )}
+
+        {tab === "appearance" && (
+          <div className="space-y-2">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Theme</h4>
+              <div className="flex gap-2">
+                {themes.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTheme(t)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                      (theme ?? "system") === t
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-input hover:bg-accent",
+                    )}
+                  >
+                    <ThemeIcon theme={t} />
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-3 pt-3 border-t">
+              <h4 className="text-sm font-medium">Layout</h4>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="appearance-compact"
+                  checked={compact}
+                  onCheckedChange={(checked) =>
+                    setCompact(checked === true)
+                  }
+                />
+                <Label
+                  htmlFor="appearance-compact"
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Compact mode
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Reduce spacing in chat for a denser layout
+              </p>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

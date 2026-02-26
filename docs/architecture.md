@@ -22,6 +22,7 @@ User Browser
     ├── POST /api/chats         → Create chat with crawled content
     ├── POST /api/chat          → Streaming AI chat (Vercel AI SDK → OpenAI)
     ├── POST /api/register      → User registration + guest chat migration
+    ├── PATCH /api/profile      → Update name/password (authenticated)
     └── NextAuth endpoints      → Login/logout/session
           │
           ├── Prisma ORM → SQLite database
@@ -65,6 +66,7 @@ src/
 │   ├── chat/[id]/page.tsx        # Chat interface
 │   └── api/
 │       ├── register/route.ts     # User registration
+│       ├── profile/route.ts      # Profile update (name/password)
 │       ├── crawl/route.ts        # URL crawling
 │       ├── chat/route.ts         # Streaming chat (Vercel AI SDK)
 │       ├── chats/route.ts        # List / create chats
@@ -75,7 +77,8 @@ src/
 │   ├── chat-input.tsx            # Message input box
 │   ├── new-chat-dialog.tsx       # New chat URL input + sub-link selection
 │   ├── url-badge.tsx             # URL indicator in chat header
-│   └── user-menu.tsx             # Auth state display in sidebar
+│   ├── user-menu.tsx             # Auth state display in sidebar
+│   └── profile-settings-dialog.tsx # Profile settings popup
 ├── lib/
 │   ├── auth.ts                   # NextAuth config + helpers
 │   ├── db.ts                     # Prisma client singleton

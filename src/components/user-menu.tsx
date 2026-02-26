@@ -15,7 +15,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AuthDialog } from "@/components/auth-dialog";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { ProfileSettingsDialog } from "@/components/profile-settings-dialog";
+import { LogOut, Settings, User as UserIcon } from "lucide-react";
 
 interface UserMenuProps {
   user: { name?: string | null; email?: string | null } | null;
@@ -26,6 +27,7 @@ interface UserMenuProps {
 export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (user) {
     const initials = (user.name || user.email || "U")
@@ -61,6 +63,10 @@ export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
           <TooltipContent side="right">Account menu</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={async () => {
               const { signOut } = await import("next-auth/react");
@@ -71,6 +77,11 @@ export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
+        <ProfileSettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          user={user}
+        />
       </DropdownMenu>
     );
   }

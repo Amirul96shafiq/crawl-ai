@@ -215,6 +215,45 @@ Streaming AI chat endpoint. Uses Vercel AI SDK.
 
 ---
 
+## PATCH /api/profile
+
+Update the authenticated user's profile (name and/or password).
+
+**Request Body:**
+
+```json
+{
+  "name": "New Name",
+  "currentPassword": "current-password",
+  "newPassword": "new-password"
+}
+```
+
+- `name` (optional): Display name; pass empty string to clear
+- `currentPassword` (required when changing password): Current password for verification
+- `newPassword` (optional): New password (min 8 chars); omit to skip password change
+
+**Logic:**
+
+1. Require authenticated session
+2. Validate inputs (current password required for password change, new password min 8 chars)
+3. Verify current password when changing password
+4. Update User record in database
+
+**Response:** `200 OK`
+
+```json
+{ "success": true }
+```
+
+**Errors:**
+
+- `401` - Not authenticated
+- `400` - Validation error (missing current password, short new password, incorrect current password)
+- `404` - User not found
+
+---
+
 ## NextAuth Routes (automatic)
 
 Handled by NextAuth.js v5 catch-all route at `src/app/api/auth/[...nextauth]/route.ts`:

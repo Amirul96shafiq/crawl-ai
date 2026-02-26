@@ -2,6 +2,8 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { useAppearance } from "@/components/appearance-provider";
+import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -24,6 +26,7 @@ export function ChatInput({
   isLoading,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { compact } = useAppearance();
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -35,7 +38,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="bg-background p-4">
+    <div className={cn("bg-background", compact ? "p-2" : "p-4")}>
       <div className="mx-auto flex max-w-3xl gap-2 items-end">
         <Textarea
           ref={textareaRef}
