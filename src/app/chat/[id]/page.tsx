@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { GUEST_COOKIE_NAME } from "@/lib/constants";
-import { AppShell } from "@/components/app-shell";
 import { ChatView } from "@/components/chat-view";
 
 interface ChatPageProps {
@@ -35,16 +34,14 @@ export default async function ChatPage({ params }: ChatPageProps) {
   if (!chat) notFound();
 
   return (
-    <AppShell>
-      <ChatView
-        chatId={chat.id}
-        pages={chat.pages}
-        initialMessages={chat.messages.map((m) => ({
-          id: m.id,
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        }))}
-      />
-    </AppShell>
+    <ChatView
+      chatId={chat.id}
+      pages={chat.pages}
+      initialMessages={chat.messages.map((m) => ({
+        id: m.id,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }))}
+    />
   );
 }

@@ -36,9 +36,10 @@ interface CrawlResult {
 interface NewChatDialogProps {
   children?: React.ReactNode;
   guestRemaining?: number;
+  onChatCreated?: () => void;
 }
 
-export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) {
+export function NewChatDialog({ children, guestRemaining, onChatCreated }: NewChatDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("");
@@ -147,6 +148,7 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
       const data = await res.json();
       setOpen(false);
       reset();
+      onChatCreated?.();
       toast.success("Chat created successfully");
       router.push(`/chat/${data.id}`);
       router.refresh();

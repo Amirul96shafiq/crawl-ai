@@ -355,6 +355,7 @@ function SidebarContent({
   onPin,
   onCollapse,
   onReorder,
+  onChatCreated,
   identityKey,
   openMenuChatId,
   onOpenMenuChatIdChange,
@@ -366,6 +367,7 @@ function SidebarContent({
   onPin: (id: string, pinned: boolean) => void;
   onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
+  onChatCreated?: () => void;
   identityKey: string | null;
   openMenuChatId: string | null;
   onOpenMenuChatIdChange: (id: string | null) => void;
@@ -403,7 +405,7 @@ function SidebarContent({
         )}
       >
         <div className="flex-1">
-          <NewChatDialog guestRemaining={guestRemaining} />
+          <NewChatDialog guestRemaining={guestRemaining} onChatCreated={onChatCreated} />
         </div>
         {onCollapse && (
           <Tooltip>
@@ -494,7 +496,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
 
   useEffect(() => {
     fetchChats();
-  }, [pathname, user?.email]);
+  }, [user?.email]);
 
   async function fetchChats() {
     try {
@@ -668,6 +670,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onPin={handlePin}
             onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
+            onChatCreated={fetchChats}
             identityKey={identityKey}
             openMenuChatId={openMenuChatId}
             onOpenMenuChatIdChange={setOpenMenuChatId}
@@ -701,6 +704,7 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onRename={handleRename}
             onPin={handlePin}
             onReorder={handleReorder}
+            onChatCreated={fetchChats}
             identityKey={identityKey}
             openMenuChatId={openMenuChatId}
             onOpenMenuChatIdChange={setOpenMenuChatId}
