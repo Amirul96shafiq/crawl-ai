@@ -17,11 +17,11 @@ type Theme = (typeof themes)[number];
 function ThemeIcon({ theme }: { theme: Theme }) {
   switch (theme) {
     case "light":
-      return <Sun className="h-4 w-4" />;
+      return <Sun className="h-5 w-5" />;
     case "dark":
-      return <Moon className="h-4 w-4" />;
+      return <Moon className="h-5 w-5" />;
     case "system":
-      return <Monitor className="h-4 w-4" />;
+      return <Monitor className="h-5 w-5" />;
   }
 }
 
@@ -31,10 +31,13 @@ export function ThemeToggle() {
 
   useEffect(() => setMounted(true), []);
 
+  const buttonClass =
+    "fixed top-3 right-3 z-40 bg-background/95 backdrop-blur-sm shadow-md border border-border/50 hover:bg-accent";
+
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="fixed top-3 right-3 z-40">
-        <Sun className="h-4 w-4" />
+      <Button variant="ghost" size="icon" className={buttonClass}>
+        <Sun className="h-5 w-5" />
       </Button>
     );
   }
@@ -49,7 +52,7 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-3 right-3 z-40"
+          className={buttonClass}
           onClick={() => {
             setTheme(nextTheme);
             toast.success(`Theme set to ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
