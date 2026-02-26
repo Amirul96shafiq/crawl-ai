@@ -30,7 +30,7 @@ export function ChatInput({
   }
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="bg-background p-4">
       <div className="mx-auto flex max-w-3xl gap-2 items-end">
         <Textarea
           ref={textareaRef}

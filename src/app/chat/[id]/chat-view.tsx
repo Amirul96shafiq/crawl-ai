@@ -52,7 +52,7 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b px-4 py-3 md:pl-4 pl-14">
+      <div className="px-4 py-3 md:pl-4 pl-14">
         <UrlBadge pages={pages} />
       </div>
       <ChatMessages messages={displayMessages} isLoading={isLoading} />
