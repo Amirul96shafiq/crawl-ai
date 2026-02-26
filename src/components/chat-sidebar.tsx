@@ -15,6 +15,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Trash2, Menu, Globe, X, PanelLeftClose, PanelLeft, Plus } from "lucide-react";
 
 interface ChatItem {
@@ -51,13 +56,18 @@ function SidebarContent({
           <NewChatDialog guestRemaining={guestRemaining} />
         </div>
         {onCollapse && (
-          <Button
-            size="icon"
-            className="h-9 w-9 shrink-0"
-            onClick={onCollapse}
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={onCollapse}
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Collapse sidebar</TooltipContent>
+          </Tooltip>
         )}
       </div>
       <Separator />
@@ -179,19 +189,29 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
               : "opacity-0 pointer-events-none",
           )}
         >
-          <NewChatDialog guestRemaining={guestRemaining}>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </NewChatDialog>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setCollapsed(false)}
-          >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NewChatDialog guestRemaining={guestRemaining}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </NewChatDialog>
+            </TooltipTrigger>
+            <TooltipContent>New chat</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setCollapsed(false)}
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Expand sidebar</TooltipContent>
+          </Tooltip>
           <div className="mt-auto">
             <UserMenu user={user} guestRemaining={guestRemaining} collapsed />
           </div>
@@ -219,15 +239,20 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
 
       {/* Mobile sidebar */}
       <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden fixed top-3 left-3 z-40"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden fixed top-3 left-3 z-40"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Open menu</TooltipContent>
+        </Tooltip>
         <SheetContent side="left" className="w-[280px] p-0">
           <SidebarContent
             user={user}

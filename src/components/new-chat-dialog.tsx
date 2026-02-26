@@ -14,6 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Loader2, Plus, Globe, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -159,14 +164,21 @@ export function NewChatDialog({ children, guestRemaining }: NewChatDialogProps) 
         if (!v) reset();
       }}
     >
-      <DialogTrigger asChild>
-        {children || (
+      {children ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">New chat</TooltipContent>
+        </Tooltip>
+      ) : (
+        <DialogTrigger asChild>
           <Button className="w-full gap-2">
             <Plus className="h-4 w-4" />
             New Chat
           </Button>
-        )}
-      </DialogTrigger>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>

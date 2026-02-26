@@ -1,6 +1,11 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Globe } from "lucide-react";
 
 interface UrlBadgeProps {
@@ -22,22 +27,28 @@ export function UrlBadge({ pages }: UrlBadgeProps) {
         })();
 
         return (
-          <a
-            key={page.url}
-            href={page.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Badge
-              variant="secondary"
-              className="gap-1.5 max-w-[300px] truncate"
-            >
-              <Globe className="h-3 w-3 shrink-0" />
-              <span className="truncate">
-                {page.title || hostname}
-              </span>
-            </Badge>
-          </a>
+          <Tooltip key={page.url}>
+            <TooltipTrigger asChild>
+              <a
+                href={page.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Badge
+                  variant="secondary"
+                  className="gap-1.5 max-w-[300px] truncate"
+                >
+                  <Globe className="h-3 w-3 shrink-0" />
+                  <span className="truncate">
+                    {page.title || hostname}
+                  </span>
+                </Badge>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <span className="max-w-xs break-all">{page.url}</span>
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </div>

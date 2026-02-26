@@ -2,6 +2,11 @@
 
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { SendHorizontal } from "lucide-react";
 import { useRef, type KeyboardEvent } from "react";
 
@@ -42,14 +47,19 @@ export function ChatInput({
           rows={1}
           disabled={isLoading}
         />
-        <Button
-          size="icon"
-          onClick={onSubmit}
-          disabled={!input.trim() || isLoading}
-          className="shrink-0 size-[44px]"
-        >
-          <SendHorizontal className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              onClick={onSubmit}
+              disabled={!input.trim() || isLoading}
+              className="shrink-0 size-[44px]"
+            >
+              <SendHorizontal className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left">Send message</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );

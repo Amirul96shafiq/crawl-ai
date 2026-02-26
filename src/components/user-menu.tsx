@@ -9,6 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AuthDialog } from "@/components/auth-dialog";
 import { LogOut, User as UserIcon } from "lucide-react";
 
@@ -32,14 +37,16 @@ export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
 
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          {collapsed ? (
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Avatar className="h-7 w-7">
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-            </Button>
-          ) : (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              {collapsed ? (
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              ) : (
             <Button variant="ghost" className="w-full justify-start gap-2 px-2">
               <Avatar className="h-7 w-7">
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
@@ -49,7 +56,10 @@ export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
               </span>
             </Button>
           )}
-        </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">Account menu</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="start" className="w-48">
           <DropdownMenuItem
             onClick={async () => {
@@ -73,14 +83,19 @@ export function UserMenu({ user, guestRemaining, collapsed }: UserMenuProps) {
   if (collapsed) {
     return (
       <>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => openAuth("login")}
-        >
-          <UserIcon className="h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => openAuth("login")}
+            >
+              <UserIcon className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Login or register</TooltipContent>
+        </Tooltip>
         <AuthDialog
           open={authOpen}
           onOpenChange={setAuthOpen}
