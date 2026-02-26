@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Sun, Moon, Monitor } from "lucide-react";
+import { toast } from "sonner";
 
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
@@ -49,7 +50,10 @@ export function ThemeToggle() {
           variant="ghost"
           size="icon"
           className="fixed top-3 right-3 z-40"
-          onClick={() => setTheme(nextTheme)}
+          onClick={() => {
+            setTheme(nextTheme);
+            toast.success(`Theme set to ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
+          }}
           aria-label={`Switch to ${nextTheme} theme`}
         >
           <ThemeIcon theme={current} />

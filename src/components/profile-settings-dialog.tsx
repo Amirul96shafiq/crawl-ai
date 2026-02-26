@@ -265,7 +265,10 @@ export function ProfileSettingsDialog({
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setTheme(t)}
+                    onClick={() => {
+                      setTheme(t);
+                      toast.success(`Theme set to ${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                    }}
                     className={cn(
                       "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
                       (theme ?? "system") === t
@@ -285,9 +288,11 @@ export function ProfileSettingsDialog({
                 <Checkbox
                   id="appearance-compact"
                   checked={compact}
-                  onCheckedChange={(checked) =>
-                    setCompact(checked === true)
-                  }
+                  onCheckedChange={(checked) => {
+                    const enabled = checked === true;
+                    setCompact(enabled);
+                    toast.success(enabled ? "Compact mode enabled" : "Compact mode disabled");
+                  }}
                 />
                 <Label
                   htmlFor="appearance-compact"
