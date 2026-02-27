@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     const baseWhere = { ...ownership, ...scopeFilter };
 
     const chatInclude = {
-      pages: { select: { id: true, content: true, title: true } },
+      pages: { select: { id: true, url: true, content: true, title: true } },
       messages: { select: { id: true, content: true } },
     };
 
@@ -113,10 +113,12 @@ export async function GET(request: Request) {
         if (chat.title?.toLowerCase().includes(lowerQ)) return true;
         if (chat.messages.some((m) => m.content.toLowerCase().includes(lowerQ))) return true;
         if (chat.pages.some((p) => p.content.toLowerCase().includes(lowerQ))) return true;
+        if (chat.pages.some((p) => p.url.toLowerCase().includes(lowerQ))) return true;
+        if (chat.pages.some((p) => p.title?.toLowerCase().includes(lowerQ))) return true;
         return false;
       })
       .map((chat) => {
-        const matches: { type: "title" | "message" | "page"; snippet: string; messageId?: string }[] = [];
+        const matches: { type: "title" | "message" | "page" | "url"; snippet: string; messageId?: string }[] = [];
 
         if (chat.title?.toLowerCase().includes(lowerQ)) {
           matches.push({ type: "title", snippet: extractSnippet(chat.title, q) });
@@ -137,6 +139,18 @@ export async function GET(request: Request) {
             matches.push({
               type: "page",
               snippet: extractSnippet(page.content, q),
+            });
+          }
+          if (page.url.toLowerCase().includes(lowerQ)) {
+            matches.push({
+              type: "url",
+              snippet: extractSnippet(page.url, q),
+            });
+          }
+          if (page.title?.toLowerCase().includes(lowerQ)) {
+            matches.push({
+              type: "page",
+              snippet: extractSnippet(page.title, q),
             });
           }
         }

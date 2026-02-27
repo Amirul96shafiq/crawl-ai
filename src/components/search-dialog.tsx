@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, MessageSquare, FileText, Type } from "lucide-react";
+import { Loader2, MessageSquare, FileText, Type, Link2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SearchMatch {
-  type: "title" | "message" | "page";
+  type: "title" | "message" | "page" | "url";
   snippet: string;
   messageId?: string;
 }
@@ -44,6 +44,8 @@ function MatchIcon({ type }: { type: SearchMatch["type"] }) {
       return <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
     case "page":
       return <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
+    case "url":
+      return <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
   }
 }
 
@@ -55,6 +57,8 @@ function MatchTypeLabel({ type }: { type: SearchMatch["type"] }) {
       return "Message";
     case "page":
       return "Page content";
+    case "url":
+      return "Page URL";
   }
 }
 
@@ -146,7 +150,7 @@ export function SearchDialog({
           </DialogHeader>
           <div className="space-y-2">
             <Input
-              placeholder="Search titles, messages, page content…"
+              placeholder="Search titles, messages, page content, URLs…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               autoFocus
