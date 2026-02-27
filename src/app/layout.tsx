@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppearanceProvider } from "@/components/appearance-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
@@ -38,7 +37,6 @@ export default function RootLayout({
           <AppearanceProvider>
           <TooltipProvider>
             <AppShell>{children}</AppShell>
-            <ThemeToggle />
             <Toaster />
           </TooltipProvider>
           </AppearanceProvider>

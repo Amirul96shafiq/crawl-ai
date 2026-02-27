@@ -57,8 +57,6 @@ import {
   Trash2,
   Menu,
   Globe,
-  PanelLeftClose,
-  PanelLeft,
   Plus,
   MoreVertical,
   Pencil,
@@ -86,6 +84,8 @@ interface ChatItem {
 interface ChatSidebarProps {
   user: { name?: string | null; email?: string | null } | null;
   guestRemaining?: number;
+  collapsed?: boolean;
+  onCollapseChange?: (collapsed: boolean) => void;
 }
 
 function getStoredOrder(identityKey: string): string[] {
@@ -378,7 +378,6 @@ function SidebarContent({
   onRename,
   onPin,
   onArchive,
-  onCollapse,
   onReorder,
   onChatCreated,
   identityKey,
@@ -397,7 +396,6 @@ function SidebarContent({
   onRename: (id: string, title: string) => void;
   onPin: (id: string, pinned: boolean) => void;
   onArchive: (id: string) => void;
-  onCollapse?: () => void;
   onReorder?: (orderedIds: string[]) => void;
   onChatCreated?: () => void;
   identityKey: string | null;
@@ -478,20 +476,6 @@ function SidebarContent({
         <div className="flex-1">
           <NewChatDialog guestRemaining={guestRemaining} onChatCreated={onChatCreated} />
         </div>
-        {onCollapse && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0"
-                onClick={onCollapse}
-              >
-                <PanelLeftClose className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Collapse sidebar</TooltipContent>
-          </Tooltip>
-        )}
       </div>
       <Separator />
       <div
@@ -639,13 +623,17 @@ function SidebarContent({
   );
 }
 
-export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
+export function ChatSidebar({
+  user,
+  guestRemaining,
+  collapsed = false,
+  onCollapseChange,
+}: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [identityKey, setIdentityKey] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -875,19 +863,6 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             </TooltipTrigger>
             <TooltipContent>New chat</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setCollapsed(false)}
-              >
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">Expand sidebar</TooltipContent>
-          </Tooltip>
           {collapsed && (() => {
             const pinnedChats = chats.filter((c) => c.pinnedAt);
             return pinnedChats.length > 0 ? (
@@ -945,7 +920,6 @@ export function ChatSidebar({ user, guestRemaining }: ChatSidebarProps) {
             onRename={handleRename}
             onPin={handlePin}
             onArchive={handleArchive}
-            onCollapse={() => setCollapsed(true)}
             onReorder={handleReorder}
             onChatCreated={() => fetchChats(false)}
             identityKey={identityKey}
