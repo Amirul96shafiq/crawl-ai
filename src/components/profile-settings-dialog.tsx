@@ -13,11 +13,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Download } from "lucide-react";
+import { Loader2, Trash2, Download, RefreshCw, ShieldAlert, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, generateStrongPassword, getPasswordScore } from "@/lib/utils";
 import { useAppearance } from "@/components/appearance-provider";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -276,7 +276,20 @@ export function ProfileSettingsDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="profile-new-password">New password</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="profile-new-password">New password</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => setNewPassword(generateStrongPassword())}
+                    aria-label="Generate strong password"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                    Generate
+                  </Button>
+                </div>
                 <PasswordInput
                   id="profile-new-password"
                   placeholder="Min 8 characters"
@@ -285,6 +298,55 @@ export function ProfileSettingsDialog({
                   autoComplete="new-password"
                   minLength={8}
                 />
+                <div className="flex gap-1" role="status" aria-live="polite">
+                  {[1, 2, 3].map((level) => {
+                    const score = getPasswordScore(newPassword);
+                    const filled = level <= score;
+                    return (
+                      <div
+                        key={level}
+                        className={cn(
+                          "h-1 flex-1 rounded-full transition-colors",
+                          filled
+                            ? score === 1
+                              ? "bg-destructive"
+                              : score === 2
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                            : "bg-muted"
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+                {newPassword.length > 0 && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    {getPasswordScore(newPassword) === 0 && (
+                      <>
+                        <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                        Add 8+ characters
+                      </>
+                    )}
+                    {getPasswordScore(newPassword) === 1 && (
+                      <>
+                        <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-destructive" />
+                        Add upper & lowercase
+                      </>
+                    )}
+                    {getPasswordScore(newPassword) === 2 && (
+                      <>
+                        <Shield className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        Add symbols (e.g. !@#$)
+                      </>
+                    )}
+                    {getPasswordScore(newPassword) === 3 && (
+                      <>
+                        <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                        Strong password
+                      </>
+                    )}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="profile-confirm-password">Confirm new password</Label>
