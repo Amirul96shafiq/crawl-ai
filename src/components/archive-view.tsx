@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArchivedChatDialog } from "@/components/archived-chat-dialog";
 import {
@@ -20,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Archive, Trash2, ArchiveRestore, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface ArchivedChatItem {
   id: string;
@@ -37,6 +39,9 @@ interface ChatWithMessages {
 }
 
 export function ArchiveView() {
+  const searchParams = useSearchParams();
+  const highlightChatId = searchParams.get("highlight") ?? undefined;
+  const scrollRef = useRef<HTMLUListElement>(null);
   const [chats, setChats] = useState<ArchivedChatItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,6 +61,16 @@ export function ArchiveView() {
       .catch(() => setChats([]))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!highlightChatId || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector(
+      `[data-chat-id="${highlightChatId}"]`,
+    );
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightChatId, chats]);
 
   function removeFromStoredOrder(chatId: string) {
     if (typeof window === "undefined" || !identityKey) return;
@@ -180,11 +195,16 @@ export function ArchiveView() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul ref={scrollRef} className="space-y-2">
           {chats.map((chat) => (
             <li
               key={chat.id}
-              className="group flex items-center gap-3 rounded-lg border bg-card px-4 py-3 hover:bg-accent/50 transition-colors cursor-pointer"
+              data-chat-id={chat.id}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg border bg-card px-4 py-3 hover:bg-accent/50 transition-colors cursor-pointer",
+                chat.id === highlightChatId &&
+                  "ring-4 ring-primary ring-offset-4 ring-offset-background",
+              )}
               onClick={() => handleChatClick(chat)}
             >
               <span className="flex-1 min-w-0 truncate text-sm font-medium">

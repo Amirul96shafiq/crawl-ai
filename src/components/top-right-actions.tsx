@@ -8,9 +8,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Sun, Moon, Monitor, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Sun, Moon, Monitor, PanelLeftClose, PanelLeft, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { SearchDialog } from "@/components/search-dialog";
 
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
@@ -30,16 +31,19 @@ const buttonBaseClass =
   "h-9 w-9 shrink-0 rounded-none hover:bg-accent";
 
 interface TopRightActionsProps {
+  user: { name?: string | null; email?: string | null } | null;
   sidebarCollapsed: boolean;
   onSidebarCollapseToggle: () => void;
 }
 
 export function TopRightActions({
+  user,
   sidebarCollapsed,
   onSidebarCollapseToggle,
 }: TopRightActionsProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -54,22 +58,18 @@ export function TopRightActions({
           <Button
             variant="ghost"
             size="icon"
-            className={cn(buttonBaseClass, "hidden md:inline-flex")}
-            onClick={onSidebarCollapseToggle}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={buttonBaseClass}
+            onClick={() => setSearchOpen(true)}
+            aria-label="Search chats"
           >
-            {sidebarCollapsed ? (
-              <PanelLeft className="h-5 w-5" />
-            ) : (
-              <PanelLeftClose className="h-5 w-5" />
-            )}
+            <Search className="h-5 w-5" />
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          {sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          Search chats
         </TooltipContent>
       </Tooltip>
-      <div className="hidden h-px w-full shrink-0 bg-border md:block" />
+      <div className="h-px w-full shrink-0 bg-border" />
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
@@ -95,6 +95,32 @@ export function TopRightActions({
           Switch to {nextTheme} theme
         </TooltipContent>
       </Tooltip>
+      <div className="hidden h-px w-full shrink-0 bg-border md:block" />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(buttonBaseClass, "hidden md:inline-flex")}
+            onClick={onSidebarCollapseToggle}
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeft className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          {sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        </TooltipContent>
+      </Tooltip>
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        user={user}
+      />
     </div>
   );
 }

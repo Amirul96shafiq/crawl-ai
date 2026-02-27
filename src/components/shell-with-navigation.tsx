@@ -44,6 +44,7 @@ export function ShellWithNavigation({
         </main>
       </div>
       <TopRightActions
+        user={user}
         sidebarCollapsed={sidebarCollapsed}
         onSidebarCollapseToggle={() => setSidebarCollapsed((c) => !c)}
       />

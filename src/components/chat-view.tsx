@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { useSearchParams } from "next/navigation";
 import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
@@ -18,6 +19,8 @@ interface ChatViewProps {
 export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
   const [input, setInput] = useState("");
   const { compact } = useAppearance();
+  const searchParams = useSearchParams();
+  const highlightMessageId = searchParams.get("highlight") ?? undefined;
 
   const transport = useMemo(
     () => new DefaultChatTransport({ api: "/api/chat", body: { chatId } }),
@@ -63,7 +66,11 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
       >
         <UrlBadge pages={pages} />
       </div>
-      <ChatMessages messages={displayMessages} isLoading={isLoading} />
+      <ChatMessages
+        messages={displayMessages}
+        isLoading={isLoading}
+        highlightMessageId={highlightMessageId}
+      />
       <ChatInput
         input={input}
         onChange={setInput}
