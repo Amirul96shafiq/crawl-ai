@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { NewChatDialog } from "@/components/new-chat-dialog";
+import { ProfileSettingsDialog } from "@/components/profile-settings-dialog";
 import { UserMenu } from "@/components/user-menu";
 import { useAppearance } from "@/components/appearance-provider";
 import { useNavigationLoading } from "@/components/navigation-loading-context";
@@ -393,6 +395,10 @@ function SidebarContent({
   loadingMore,
   onLoadMore,
   initialLoading = false,
+  newChatOpen,
+  onNewChatOpenChange,
+  settingsOpen,
+  onSettingsOpenChange,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
@@ -411,11 +417,14 @@ function SidebarContent({
   loadingMore: boolean;
   onLoadMore?: () => void;
   initialLoading?: boolean;
+  newChatOpen: boolean;
+  onNewChatOpenChange: (open: boolean) => void;
+  settingsOpen?: boolean;
+  onSettingsOpenChange?: (open: boolean) => void;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
   const navLoading = useNavigationLoading();
-  const [newChatOpen, setNewChatOpen] = useState(false);
 
   const handleNavigateToChat = useCallback(
     (id: string) => {
@@ -483,7 +492,7 @@ function SidebarContent({
             guestRemaining={guestRemaining}
             onChatCreated={onChatCreated}
             open={newChatOpen}
-            onOpenChange={setNewChatOpen}
+            onOpenChange={onNewChatOpenChange}
           />
         </div>
       </div>
@@ -637,6 +646,8 @@ function SidebarContent({
           user={user}
           guestRemaining={guestRemaining}
           initialLoading={initialLoading}
+          settingsOpen={settingsOpen}
+          onSettingsOpenChange={onSettingsOpenChange}
         />
       </div>
     </div>
@@ -655,6 +666,20 @@ export function ChatSidebar({
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useHotkeys("alt+n", () => setNewChatOpen(true), { enableOnFormTags: [] });
+  useHotkeys(
+    "alt+comma",
+    () => setSettingsOpen(true),
+    {
+      enableOnFormTags: [],
+      enabled: !!user,
+      preventDefault: true,
+    },
+    [user],
+  );
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const chatsLengthRef = useRef(0);
@@ -873,16 +898,15 @@ export function ChatSidebar({
             </TooltipTrigger>
             <TooltipContent side="right">Go to home</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <NewChatDialog guestRemaining={guestRemaining}>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </NewChatDialog>
-            </TooltipTrigger>
-            <TooltipContent>New chat</TooltipContent>
-          </Tooltip>
+          <NewChatDialog
+            guestRemaining={guestRemaining}
+            open={newChatOpen}
+            onOpenChange={setNewChatOpen}
+          >
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </NewChatDialog>
           {collapsed && (() => {
             const pinnedChats = chats.filter((c) => c.pinnedAt);
             return pinnedChats.length > 0 ? (
@@ -918,6 +942,8 @@ export function ChatSidebar({
               guestRemaining={guestRemaining}
               collapsed
               initialLoading={initialLoading}
+              settingsOpen={settingsOpen}
+              onSettingsOpenChange={setSettingsOpen}
             />
           </div>
         </div>
@@ -951,6 +977,10 @@ export function ChatSidebar({
             loadingMore={loadingMore}
             onLoadMore={loadMore}
             initialLoading={initialLoading}
+            newChatOpen={newChatOpen}
+            onNewChatOpenChange={setNewChatOpen}
+            settingsOpen={settingsOpen}
+            onSettingsOpenChange={setSettingsOpen}
           />
         </div>
       </aside>
@@ -992,9 +1022,20 @@ export function ChatSidebar({
             loadingMore={loadingMore}
             onLoadMore={loadMore}
             initialLoading={initialLoading}
+            newChatOpen={newChatOpen}
+            onNewChatOpenChange={setNewChatOpen}
+            settingsOpen={settingsOpen}
+            onSettingsOpenChange={setSettingsOpen}
           />
         </SheetContent>
       </Sheet>
+      {user && (
+        <ProfileSettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          user={user}
+        />
+      )}
     </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -51,6 +52,23 @@ export function TopRightActions({
   const nextIndex = (themes.indexOf(current) + 1) % themes.length;
   const nextTheme = themes[nextIndex];
 
+  useHotkeys("alt+/, alt+slash", () => setSearchOpen(true), {
+    enableOnFormTags: [],
+    preventDefault: true,
+  });
+  useHotkeys(
+    "alt+t",
+    () => {
+      setTheme(nextTheme);
+      toast.success(
+        `Theme set to ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`,
+      );
+    },
+    { enableOnFormTags: [] },
+    [nextTheme],
+  );
+  useHotkeys("alt+b", onSidebarCollapseToggle, { enableOnFormTags: [] });
+
   return (
     <div className="fixed top-3 right-0 z-40 flex flex-col rounded-l-md border border-r-0 border-border/50 bg-card">
       <Tooltip>
@@ -66,7 +84,7 @@ export function TopRightActions({
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          Search chats
+          Search chats (Alt+/)
         </TooltipContent>
       </Tooltip>
       <div className="h-px w-full shrink-0 bg-border" />
@@ -92,7 +110,7 @@ export function TopRightActions({
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          Switch to {nextTheme} theme
+          Switch to {nextTheme} theme (Alt+T)
         </TooltipContent>
       </Tooltip>
       <div className="hidden h-px w-full shrink-0 bg-border md:block" />
@@ -113,7 +131,7 @@ export function TopRightActions({
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          {sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          {sidebarCollapsed ? "Expand sidebar (Alt+B)" : "Collapse sidebar (Alt+B)"}
         </TooltipContent>
       </Tooltip>
       <SearchDialog

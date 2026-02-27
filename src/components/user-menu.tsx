@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,6 +27,8 @@ interface UserMenuProps {
   guestRemaining?: number;
   collapsed?: boolean;
   initialLoading?: boolean;
+  settingsOpen?: boolean;
+  onSettingsOpenChange?: (open: boolean) => void;
 }
 
 export function UserMenu({
@@ -33,10 +36,22 @@ export function UserMenu({
   guestRemaining,
   collapsed,
   initialLoading = false,
+  settingsOpen: controlledSettingsOpen,
+  onSettingsOpenChange: controlledOnSettingsOpenChange,
 }: UserMenuProps) {
   const [authOpen, setAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [internalSettingsOpen, setInternalSettingsOpen] = useState(false);
+
+  const isSettingsControlled =
+    controlledSettingsOpen !== undefined &&
+    controlledOnSettingsOpenChange !== undefined;
+  const settingsOpen = isSettingsControlled
+    ? controlledSettingsOpen
+    : internalSettingsOpen;
+  const setSettingsOpen = isSettingsControlled
+    ? controlledOnSettingsOpenChange!
+    : setInternalSettingsOpen;
 
   if (initialLoading) {
     return (
@@ -95,6 +110,7 @@ export function UserMenu({
           <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
+            <DropdownMenuShortcut>Alt+,</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={async () => {
@@ -106,11 +122,13 @@ export function UserMenu({
             Log out
           </DropdownMenuItem>
         </DropdownMenuContent>
-        <ProfileSettingsDialog
-          open={settingsOpen}
-          onOpenChange={setSettingsOpen}
-          user={user}
-        />
+        {!isSettingsControlled && (
+          <ProfileSettingsDialog
+            open={settingsOpen}
+            onOpenChange={setSettingsOpen}
+            user={user}
+          />
+        )}
       </DropdownMenu>
     );
   }

@@ -184,15 +184,20 @@ export function NewChatDialog({
           <TooltipTrigger asChild>
             <DialogTrigger asChild>{children}</DialogTrigger>
           </TooltipTrigger>
-          <TooltipContent side="right">New chat</TooltipContent>
+          <TooltipContent side="right">New chat (Alt+N)</TooltipContent>
         </Tooltip>
       ) : (
-        <DialogTrigger asChild>
-          <Button className="w-full gap-2">
-            <Plus className="h-4 w-4" />
-            New Chat
-          </Button>
-        </DialogTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button className="w-full gap-2">
+                <Plus className="h-4 w-4" />
+                New Chat
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right">New chat (Alt+N)</TooltipContent>
+        </Tooltip>
       )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
