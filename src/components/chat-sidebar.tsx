@@ -56,12 +56,12 @@ import {
   Archive,
   Trash2,
   Menu,
-  Globe,
   Plus,
   MoreVertical,
   Pencil,
   Pin,
   PinOff,
+  Link2,
 } from "lucide-react";
 
 const STORAGE_KEY_PREFIX = "chat-order-";
@@ -415,6 +415,7 @@ function SidebarContent({
   const router = useRouter();
   const { compact } = useAppearance();
   const navLoading = useNavigationLoading();
+  const [newChatOpen, setNewChatOpen] = useState(false);
 
   const handleNavigateToChat = useCallback(
     (id: string) => {
@@ -478,7 +479,12 @@ function SidebarContent({
           </Link>
         </Button>
         <div className="flex-1">
-          <NewChatDialog guestRemaining={guestRemaining} onChatCreated={onChatCreated} />
+          <NewChatDialog
+            guestRemaining={guestRemaining}
+            onChatCreated={onChatCreated}
+            open={newChatOpen}
+            onOpenChange={setNewChatOpen}
+          />
         </div>
       </div>
       <Separator />
@@ -607,10 +613,18 @@ function SidebarContent({
                   </div>
                 ))}
               {chats.length === 0 && !initialLoading && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No chats yet</p>
-                  <p className="text-xs mt-1">Enter a URL to get started</p>
+                <div className="flex flex-col items-left justify-left py-10 px-4">
+                  <p className="text-sm font-medium text-foreground">
+                    No chats yet
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 text-left max-w-[200px]">
+                    Click on{" "}
+                    <span className="mx-1.5 inline-flex h-6 items-center gap-2 rounded-sm bg-primary px-2 text-xs font-medium text-primary-foreground [&_svg]:size-3">
+                      <Plus className="h-4 w-4" />
+                      New Chat
+                    </span>{" "}
+                    above and paste a URL to crawl and chat with AI about any webpage
+                  </p>
                 </div>
               )}
             </div>

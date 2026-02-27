@@ -38,11 +38,24 @@ interface NewChatDialogProps {
   children?: React.ReactNode;
   guestRemaining?: number;
   onChatCreated?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function NewChatDialog({ children, guestRemaining, onChatCreated }: NewChatDialogProps) {
+export function NewChatDialog({
+  children,
+  guestRemaining,
+  onChatCreated,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: NewChatDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined && controlledOnOpenChange !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled
+    ? (v: boolean) => controlledOnOpenChange!(v)
+    : setInternalOpen;
   const [url, setUrl] = useState("");
   const [step, setStep] = useState<"url" | "links" | "creating">("url");
   const [crawling, setCrawling] = useState(false);
@@ -159,14 +172,13 @@ export function NewChatDialog({ children, guestRemaining, onChatCreated }: NewCh
     }
   }
 
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) reset();
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v);
-        if (!v) reset();
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {children ? (
         <Tooltip>
           <TooltipTrigger asChild>
