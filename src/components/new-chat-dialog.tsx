@@ -38,6 +38,7 @@ interface NewChatDialogProps {
   children?: React.ReactNode;
   guestRemaining?: number;
   onChatCreated?: () => void;
+  onOpenRegister?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -46,6 +47,7 @@ export function NewChatDialog({
   children,
   guestRemaining,
   onChatCreated,
+  onOpenRegister,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: NewChatDialogProps) {
@@ -213,7 +215,15 @@ export function NewChatDialog({
             {limitReached && (
               <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg p-3">
                 <AlertCircle className="h-4 w-4 shrink-0" />
-                Daily chat limit reached. Register for unlimited access.
+                Daily chat limit reached.{" "}
+                <button
+                  type="button"
+                  onClick={() => onOpenRegister?.()}
+                  className="underline underline-offset-2 font-medium hover:no-underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                >
+                  Register
+                </button>{" "}
+                for unlimited access.
               </div>
             )}
             <div className="space-y-1.5">

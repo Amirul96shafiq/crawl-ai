@@ -399,6 +399,11 @@ function SidebarContent({
   onNewChatOpenChange,
   settingsOpen,
   onSettingsOpenChange,
+  authOpen,
+  onAuthOpenChange,
+  authTab,
+  onOpenAuth,
+  onOpenRegister,
 }: ChatSidebarProps & {
   chats: ChatItem[];
   activeChatId: string | null;
@@ -421,6 +426,11 @@ function SidebarContent({
   onNewChatOpenChange: (open: boolean) => void;
   settingsOpen?: boolean;
   onSettingsOpenChange?: (open: boolean) => void;
+  authOpen?: boolean;
+  onAuthOpenChange?: (open: boolean) => void;
+  authTab?: "login" | "register";
+  onOpenAuth?: (tab: "login" | "register") => void;
+  onOpenRegister?: () => void;
 }) {
   const router = useRouter();
   const { compact } = useAppearance();
@@ -491,6 +501,7 @@ function SidebarContent({
           <NewChatDialog
             guestRemaining={guestRemaining}
             onChatCreated={onChatCreated}
+            onOpenRegister={onOpenRegister}
             open={newChatOpen}
             onOpenChange={onNewChatOpenChange}
           />
@@ -648,6 +659,10 @@ function SidebarContent({
           initialLoading={initialLoading}
           settingsOpen={settingsOpen}
           onSettingsOpenChange={onSettingsOpenChange}
+          authOpen={authOpen}
+          onAuthOpenChange={onAuthOpenChange}
+          authTab={authTab}
+          onOpenAuth={onOpenAuth}
         />
       </div>
     </div>
@@ -668,6 +683,13 @@ export function ChatSidebar({
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "register">("login");
+
+  const openAuth = useCallback((tab: "login" | "register") => {
+    setAuthTab(tab);
+    setAuthOpen(true);
+  }, []);
 
   useHotkeys("alt+n", () => setNewChatOpen(true), { enableOnFormTags: [] });
   useHotkeys(
@@ -900,6 +922,7 @@ export function ChatSidebar({
           </Tooltip>
           <NewChatDialog
             guestRemaining={guestRemaining}
+            onOpenRegister={() => openAuth("register")}
             open={newChatOpen}
             onOpenChange={setNewChatOpen}
           >
@@ -944,6 +967,10 @@ export function ChatSidebar({
               initialLoading={initialLoading}
               settingsOpen={settingsOpen}
               onSettingsOpenChange={setSettingsOpen}
+              authOpen={authOpen}
+              onAuthOpenChange={setAuthOpen}
+              authTab={authTab}
+              onOpenAuth={openAuth}
             />
           </div>
         </div>
@@ -981,6 +1008,11 @@ export function ChatSidebar({
             onNewChatOpenChange={setNewChatOpen}
             settingsOpen={settingsOpen}
             onSettingsOpenChange={setSettingsOpen}
+            authOpen={authOpen}
+            onAuthOpenChange={setAuthOpen}
+            authTab={authTab}
+            onOpenAuth={openAuth}
+            onOpenRegister={() => openAuth("register")}
           />
         </div>
       </aside>
@@ -1026,6 +1058,11 @@ export function ChatSidebar({
             onNewChatOpenChange={setNewChatOpen}
             settingsOpen={settingsOpen}
             onSettingsOpenChange={setSettingsOpen}
+            authOpen={authOpen}
+            onAuthOpenChange={setAuthOpen}
+            authTab={authTab}
+            onOpenAuth={openAuth}
+            onOpenRegister={() => openAuth("register")}
           />
         </SheetContent>
       </Sheet>

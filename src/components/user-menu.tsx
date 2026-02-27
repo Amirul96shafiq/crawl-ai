@@ -29,6 +29,10 @@ interface UserMenuProps {
   initialLoading?: boolean;
   settingsOpen?: boolean;
   onSettingsOpenChange?: (open: boolean) => void;
+  authOpen?: boolean;
+  onAuthOpenChange?: (open: boolean) => void;
+  authTab?: "login" | "register";
+  onOpenAuth?: (tab: "login" | "register") => void;
 }
 
 export function UserMenu({
@@ -38,9 +42,18 @@ export function UserMenu({
   initialLoading = false,
   settingsOpen: controlledSettingsOpen,
   onSettingsOpenChange: controlledOnSettingsOpenChange,
+  authOpen: controlledAuthOpen,
+  onAuthOpenChange: controlledOnAuthOpenChange,
+  authTab: controlledAuthTab,
+  onOpenAuth: controlledOnOpenAuth,
 }: UserMenuProps) {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [internalAuthOpen, setInternalAuthOpen] = useState(false);
+  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">("login");
+  const isAuthControlled =
+    controlledAuthOpen !== undefined && controlledOnAuthOpenChange !== undefined;
+  const authOpen = isAuthControlled ? controlledAuthOpen! : internalAuthOpen;
+  const setAuthOpen = isAuthControlled ? controlledOnAuthOpenChange! : setInternalAuthOpen;
+  const authTab = controlledAuthTab ?? internalAuthTab;
   const [internalSettingsOpen, setInternalSettingsOpen] = useState(false);
 
   const isSettingsControlled =
@@ -134,8 +147,12 @@ export function UserMenu({
   }
 
   function openAuth(tab: "login" | "register") {
-    setAuthTab(tab);
-    setAuthOpen(true);
+    if (controlledOnOpenAuth) {
+      controlledOnOpenAuth(tab);
+    } else {
+      setInternalAuthTab(tab);
+      setAuthOpen(true);
+    }
   }
 
   if (collapsed) {
