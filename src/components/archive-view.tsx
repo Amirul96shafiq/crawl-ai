@@ -162,18 +162,21 @@ export function ArchiveView() {
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Archived Chats</h1>
-          <p className="text-sm text-muted-foreground">
-            Chats you archived are listed here. Restore or delete them.
-          </p>
         </div>
       </div>
 
       {chats.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Archive className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-sm">No archived chats</p>
-          <p className="text-xs mt-1">
-            Archive chats from the sidebar menu to see them here.
+        <div className="flex flex-col items-left justify-left py-10 px-4">
+          <p className="text-sm font-medium text-foreground">
+            No archived chats
+          </p>
+          <p className="text-xs text-muted-foreground mt-1 text-left">
+            Use the{" "}
+            <span className="mx-1.5 inline-flex h-6 items-center gap-1.5 rounded-sm bg-primary px-2 text-xs font-medium text-primary-foreground [&_svg]:size-3">
+              <Archive className="h-3 w-3" />
+              Archive
+            </span>{" "}
+            option in the chat menu <b>(⋮)</b> on the sidebar to move chats here.
           </p>
         </div>
       ) : (
