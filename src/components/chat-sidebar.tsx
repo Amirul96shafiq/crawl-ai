@@ -88,6 +88,10 @@ interface ChatSidebarProps {
   guestRemaining?: number;
   collapsed?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;
+  authOpen?: boolean;
+  onAuthOpenChange?: (open: boolean) => void;
+  authTab?: "login" | "register";
+  onOpenAuth?: (tab: "login" | "register") => void;
 }
 
 function getStoredOrder(identityKey: string): string[] {
@@ -674,6 +678,10 @@ export function ChatSidebar({
   guestRemaining,
   collapsed = false,
   onCollapseChange,
+  authOpen: controlledAuthOpen,
+  onAuthOpenChange: controlledOnAuthOpenChange,
+  authTab: controlledAuthTab,
+  onOpenAuth: controlledOnOpenAuth,
 }: ChatSidebarProps) {
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [identityKey, setIdentityKey] = useState<string | null>(null);
@@ -683,13 +691,19 @@ export function ChatSidebar({
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authTab, setAuthTab] = useState<"login" | "register">("login");
+  const [internalAuthOpen, setInternalAuthOpen] = useState(false);
+  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">("login");
 
-  const openAuth = useCallback((tab: "login" | "register") => {
-    setAuthTab(tab);
-    setAuthOpen(true);
+  const isAuthControlled =
+    controlledAuthOpen !== undefined && controlledOnAuthOpenChange !== undefined;
+  const authOpen = isAuthControlled ? controlledAuthOpen! : internalAuthOpen;
+  const setAuthOpen = isAuthControlled ? controlledOnAuthOpenChange! : setInternalAuthOpen;
+  const authTab = controlledAuthTab ?? internalAuthTab;
+  const internalOpenAuth = useCallback((tab: "login" | "register") => {
+    setInternalAuthTab(tab);
+    setInternalAuthOpen(true);
   }, []);
+  const openAuth = controlledOnOpenAuth ?? internalOpenAuth;
 
   useHotkeys("alt+n", () => setNewChatOpen(true), { enableOnFormTags: [] });
   useHotkeys(

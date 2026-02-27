@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ChatSidebar } from "@/components/chat-sidebar";
 import { ChatLoadingSkeleton } from "@/components/chat-loading-skeleton";
 import { TopRightActions } from "@/components/top-right-actions";
+import { GuestLimitProvider } from "@/components/guest-limit-context";
 import { NavigationLoadingProvider, useNavigationLoading } from "@/components/navigation-loading-context";
 
 function MainContent({ children }: { children: React.ReactNode }) {
@@ -29,25 +30,41 @@ export function ShellWithNavigation({
   children,
 }: ShellWithNavigationProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authTab, setAuthTab] = useState<"login" | "register">("login");
+
+  const openAuth = useCallback((tab: "login" | "register") => {
+    setAuthTab(tab);
+    setAuthOpen(true);
+  }, []);
 
   return (
     <NavigationLoadingProvider>
-      <div className="flex h-screen">
-        <ChatSidebar
+      <GuestLimitProvider
+        guestRemaining={guestRemaining}
+        onOpenRegister={() => openAuth("register")}
+      >
+        <div className="flex h-screen">
+          <ChatSidebar
+            user={user}
+            guestRemaining={guestRemaining}
+            collapsed={sidebarCollapsed}
+            onCollapseChange={setSidebarCollapsed}
+            authOpen={authOpen}
+            onAuthOpenChange={setAuthOpen}
+            authTab={authTab}
+            onOpenAuth={openAuth}
+          />
+          <main className="flex-1 flex flex-col h-screen overflow-hidden">
+            <MainContent>{children}</MainContent>
+          </main>
+        </div>
+        <TopRightActions
           user={user}
-          guestRemaining={guestRemaining}
-          collapsed={sidebarCollapsed}
-          onCollapseChange={setSidebarCollapsed}
+          sidebarCollapsed={sidebarCollapsed}
+          onSidebarCollapseToggle={() => setSidebarCollapsed((c) => !c)}
         />
-        <main className="flex-1 flex flex-col h-screen overflow-hidden">
-          <MainContent>{children}</MainContent>
-        </main>
-      </div>
-      <TopRightActions
-        user={user}
-        sidebarCollapsed={sidebarCollapsed}
-        onSidebarCollapseToggle={() => setSidebarCollapsed((c) => !c)}
-      />
+      </GuestLimitProvider>
     </NavigationLoadingProvider>
   );
 }

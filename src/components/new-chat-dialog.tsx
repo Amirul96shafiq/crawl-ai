@@ -219,7 +219,7 @@ export function NewChatDialog({
                 <button
                   type="button"
                   onClick={() => onOpenRegister?.()}
-                  className="underline underline-offset-2 font-medium hover:no-underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded"
+                  className="underline underline-offset-2 font-medium hover:no-underline focus:outline-none rounded cursor-pointer"
                 >
                   Register
                 </button>{" "}
