@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -185,9 +186,8 @@ export function AuthDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="auth-password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="auth-password"
-                    type="password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -226,9 +226,8 @@ export function AuthDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="auth-password">Password</Label>
-                  <Input
+                  <PasswordInput
                     id="auth-password"
-                    type="password"
                     placeholder="Min 8 characters"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

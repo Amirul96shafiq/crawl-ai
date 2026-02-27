@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -266,9 +267,8 @@ export function ProfileSettingsDialog({
               <h4 className="text-sm font-medium">Password</h4>
               <div className="space-y-2">
                 <Label htmlFor="profile-current-password">Current password</Label>
-                <Input
+                <PasswordInput
                   id="profile-current-password"
-                  type="password"
                   placeholder="Enter current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
@@ -277,9 +277,8 @@ export function ProfileSettingsDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="profile-new-password">New password</Label>
-                <Input
+                <PasswordInput
                   id="profile-new-password"
-                  type="password"
                   placeholder="Min 8 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -289,9 +288,8 @@ export function ProfileSettingsDialog({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="profile-confirm-password">Confirm new password</Label>
-                <Input
+                <PasswordInput
                   id="profile-confirm-password"
-                  type="password"
                   placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
