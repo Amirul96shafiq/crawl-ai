@@ -148,6 +148,7 @@ function SortableChatItem({
   onPin,
   onArchive,
   onNavigate,
+  isGuest,
 }: {
   chat: ChatItem;
   isActive: boolean;
@@ -160,6 +161,7 @@ function SortableChatItem({
   onPin: (id: string, pinned: boolean) => void;
   onArchive: (id: string) => void;
   onNavigate: (id: string) => void;
+  isGuest?: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -316,15 +318,17 @@ function SortableChatItem({
             <Pencil />
             Rename chat
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onArchive(chat.id);
-            }}
-          >
-            <Archive />
-            Archive chat
-          </DropdownMenuItem>
+          {!isGuest && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onArchive(chat.id);
+              }}
+            >
+              <Archive />
+              Archive chat
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             variant="destructive"
             onSelect={() => {
@@ -524,6 +528,7 @@ function SidebarContent({
                               onPin={onPin}
                               onArchive={onArchive}
                               onNavigate={handleNavigateToChat}
+                              isGuest={!user}
                             />
                           ))}
                         </div>
@@ -555,6 +560,7 @@ function SidebarContent({
                               onPin={onPin}
                               onArchive={onArchive}
                               onNavigate={handleNavigateToChat}
+                              isGuest={!user}
                             />
                           );
                         })}

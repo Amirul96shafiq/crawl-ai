@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { ArchiveView } from "@/components/archive-view";
 
 export const metadata = {
@@ -5,6 +7,10 @@ export const metadata = {
   description: "View and restore your archived chats",
 };
 
-export default function ArchivePage() {
+export default async function ArchivePage() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/");
+  }
   return <ArchiveView />;
 }

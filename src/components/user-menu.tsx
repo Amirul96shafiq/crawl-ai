@@ -153,13 +153,6 @@ export function UserMenu({
             {guestRemaining}/3 chats remaining today
           </p>
         )}
-        <Link
-          href="/archive"
-          className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground rounded-md hover:bg-accent"
-        >
-          <Archive className="h-3.5 w-3.5" />
-          Archived chats
-        </Link>
         <div className="flex gap-2">
           <Button
             variant="outline"

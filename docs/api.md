@@ -191,6 +191,7 @@ or
 
 - `title` (optional): New display title; string. Empty or whitespace-only is stored as `null`.
 - `pinned` (optional): Boolean. `true` to pin, `false` to unpin. Guests may pin 1 chat; users may pin up to 5.
+- `archived` (optional): Boolean. `true` to archive (soft-delete), `false` to restore. **UI hides archive for guests**; only delete is shown. API accepts it for both, but guests typically use delete only.
 
 **Logic:**
 

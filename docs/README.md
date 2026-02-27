@@ -19,6 +19,8 @@ A ChatGPT-style web application where users can provide a website URL, the syste
 
 ## User Types
 
-- **Guest**: identified via cookie, limited to 3 chats/day, chat history tied to browser
-- **Registered User**: email/password account, unlimited chats, persistent history across devices
-- Guest chats are automatically migrated on both registration and login
+- **Guest**: Identified via `guest_id` cookie, limited to 3 chats/day, chat history tied to browser. Can only delete chats (no archive). Max 1 pinned chat.
+- **Registered User**: Email/password account, unlimited chats, persistent history across devices. Full chat actions (pin, rename, archive, delete). Max 5 pinned chats.
+- Guest chats are automatically migrated on both registration and login.
+
+See [Features: Guest vs Logged-in User](./features.md#guest-vs-logged-in-user) for a full comparison.

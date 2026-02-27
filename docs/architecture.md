@@ -54,6 +54,15 @@ User Browser
 6. Tokens stream back to the browser in real-time
 7. After first exchange, a background call generates a short chat title
 
+## Identity & Access
+
+| Type           | Identification    | Source                            |
+| -------------- | ----------------- | --------------------------------- |
+| Logged-in user | `session.user.id` | NextAuth JWT                      |
+| Guest          | `guest_id` cookie | Auto-created `Guest` record in DB |
+
+See [Features: Guest vs Logged-in User](./features.md#guest-vs-logged-in-user) for limits and UI differences.
+
 ## File Structure
 
 ```

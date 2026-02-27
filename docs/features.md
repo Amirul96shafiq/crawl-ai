@@ -92,6 +92,38 @@
 
 ---
 
+## 3.5 Guest vs Logged-in User
+
+| Feature              | Guest                            | Logged-in User               |
+| -------------------- | -------------------------------- | ---------------------------- |
+| **Identity**         | `guest_id` cookie (auto-created) | NextAuth session (userId)    |
+| **Chat limit**       | 3 per day (resets midnight UTC)  | Unlimited                    |
+| **Pinned chats**     | Max 1                            | Max 5                        |
+| **Chat actions**     | Pin, Rename, Delete only         | Pin, Rename, Archive, Delete |
+| **Archived chats**   | No (link and menu option hidden) | Yes (`/archive` page)        |
+| **Profile settings** | No                               | Yes (name, password)         |
+| **Account export**   | No                               | Yes                          |
+| **Account deletion** | N/A                              | Yes                          |
+| **Chat history**     | Tied to browser (cookie)         | Persistent across devices    |
+
+### Configuration (from `src/lib/constants.ts`)
+
+| Constant                 | Value        | Purpose                            |
+| ------------------------ | ------------ | ---------------------------------- |
+| `GUEST_COOKIE_NAME`      | `"guest_id"` | Cookie key for guest identity      |
+| `GUEST_DAILY_CHAT_LIMIT` | `3`          | Max new chats per day for guests   |
+| `MAX_PINNED_CHATS_GUEST` | `1`          | Max pinned chats for guests        |
+| `MAX_PINNED_CHATS_USER`  | `5`          | Max pinned chats for users         |
+| `MAX_SUB_LINKS_PER_CHAT` | `5`          | Sub-links per chat (same for both) |
+
+### Guest UI Restrictions
+
+- Sidebar: No "Archived chats" link in the guest menu section
+- Chat dropdown: "Archive chat" option hidden; guests see Pin, Rename, Delete only
+- When chat limit reached: New Chat dialog shows registration prompt
+
+---
+
 ## 4. Rate Limiting
 
 ### Guest Limits
@@ -120,9 +152,9 @@
 
 - Lists all chats with auto-generated titles, ordered by most recent
 - Active chat highlighted
-- Chat dot menu (⋮) with Rename, Archive, and Delete; menu visible on hover or when chat is selected
+- Chat dot menu (⋮): **Guests** see Pin, Rename, Delete; **Users** see Pin, Rename, Archive, Delete. Menu visible on hover or when chat is selected.
 - Inline rename: double-click title or use Rename from menu
-- Bottom section: guest badge with usage count ("2/3 chats today") or user avatar + name + logout
+- Bottom section: guest badge with usage count ("2/3 chats today") or user avatar + dropdown (Archived Chats, Settings, Log out)
 
 ### New Chat Flow
 

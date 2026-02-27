@@ -24,6 +24,10 @@ export async function GET(request: Request) {
     const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10) || 0, 0);
     const archived = searchParams.get("archived") === "true";
 
+    if (archived && caller.type === "guest") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const baseWhere = archived
       ? { ...where, archivedAt: { not: null } }
       : { ...where, archivedAt: null };
