@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, ShieldAlert, Shield, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldAlert, Shield, ShieldCheck, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,21 @@ function getPasswordScore(password: string): 0 | 1 | 2 | 3 {
   if (hasLower && hasUpper) score = 2;
   if (score === 2 && hasSymbol) score = 3;
   return score as 0 | 1 | 2 | 3;
+}
+
+function generateStrongPassword(): string {
+  const lower = "abcdefghijklmnopqrstuvwxyz";
+  const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const digits = "0123456789";
+  const symbols = "!@#$%&*";
+  const all = lower + upper + digits + symbols;
+  const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+  let pwd = pick(lower) + pick(upper) + pick(digits) + pick(symbols);
+  for (let i = 0; i < 8; i++) pwd += pick(all);
+  return pwd
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
 }
 
 type AuthTab = "login" | "register";
@@ -179,7 +194,7 @@ export function AuthDialog({
           </button>
         </div>
 
-        <div className="flex flex-col h-[min(320px,55vh)] shrink-0 min-h-0">
+        <div className="flex flex-col h-[min(340px,55vh)] shrink-0 min-h-0">
           {tab === "login" ? (
             <form onSubmit={handleLogin} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
               <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
@@ -236,7 +251,20 @@ export function AuthDialog({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="auth-password">Password</Label>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label htmlFor="auth-password">Password</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => setPassword(generateStrongPassword())}
+                      aria-label="Generate strong password"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                      Generate
+                    </Button>
+                  </div>
                   <PasswordInput
                     id="auth-password"
                     placeholder="Min 8 characters"
