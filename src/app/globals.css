@@ -116,6 +116,36 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@keyframes echo-pulse {
+  0% {
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 40%, transparent);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 14px color-mix(in oklch, var(--primary) 0%, transparent);
+    opacity: 0;
+  }
+}
+
+.echo-btn {
+  position: relative;
+  overflow: visible;
+}
+
+.echo-btn::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: echo-pulse 2s ease-out infinite;
+  z-index: -1;
+}
+
+.echo-btn[aria-expanded="true"]::before {
+  animation-play-state: paused;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
