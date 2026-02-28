@@ -39,7 +39,7 @@ export function ChatInput({
 
   return (
     <div className={cn("bg-background", compact ? "p-2" : "p-4")}>
-      <div className="mx-auto flex max-w-3xl gap-2 items-end">
+      <div className="mx-auto flex max-w-3xl gap-4 items-end">
         <Textarea
           ref={textareaRef}
           value={input}

@@ -492,7 +492,7 @@ function SidebarContent({
     <div className="flex h-full flex-col">
       <div
         className={cn(
-          "flex items-center gap-2",
+          "flex items-center gap-4",
           compact ? "p-2" : "p-3",
         )}
       >
