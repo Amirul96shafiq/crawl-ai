@@ -94,27 +94,30 @@
 
 ## 3.5 Guest vs Logged-in User
 
-| Feature              | Guest                            | Logged-in User               |
-| -------------------- | -------------------------------- | ---------------------------- |
-| **Identity**         | `guest_id` cookie (auto-created) | NextAuth session (userId)    |
-| **Chat limit**       | 3 per day (resets midnight UTC)  | Unlimited                    |
-| **Pinned chats**     | Max 1                            | Max 5                        |
-| **Chat actions**     | Pin, Rename, Delete only         | Pin, Rename, Archive, Delete |
-| **Archived chats**   | No (link and menu option hidden) | Yes (`/archive` page)        |
-| **Profile settings** | No                               | Yes (name, password)         |
-| **Account export**   | No                               | Yes                          |
-| **Account deletion** | N/A                              | Yes                          |
-| **Chat history**     | Tied to browser (cookie)         | Persistent across devices    |
+| Feature                | Guest                            | Logged-in User               |
+| ---------------------- | -------------------------------- | ---------------------------- |
+| **Identity**           | `guest_id` cookie (auto-created) | NextAuth session (userId)    |
+| **Chat limit**         | 3 per day (resets midnight UTC)  | Unlimited                    |
+| **Questions per chat** | 5 per chat (no reset)            | 30 per chat (resets daily)   |
+| **Pinned chats**       | Max 1                            | Max 5                        |
+| **Chat actions**       | Pin, Rename, Delete only         | Pin, Rename, Archive, Delete |
+| **Archived chats**     | No (link and menu option hidden) | Yes (`/archive` page)        |
+| **Profile settings**   | No                               | Yes (name, password)         |
+| **Account export**     | No                               | Yes                          |
+| **Account deletion**   | N/A                              | Yes                          |
+| **Chat history**       | Tied to browser (cookie)         | Persistent across devices    |
 
 ### Configuration (from `src/lib/constants.ts`)
 
-| Constant                 | Value        | Purpose                            |
-| ------------------------ | ------------ | ---------------------------------- |
-| `GUEST_COOKIE_NAME`      | `"guest_id"` | Cookie key for guest identity      |
-| `GUEST_DAILY_CHAT_LIMIT` | `3`          | Max new chats per day for guests   |
-| `MAX_PINNED_CHATS_GUEST` | `1`          | Max pinned chats for guests        |
-| `MAX_PINNED_CHATS_USER`  | `5`          | Max pinned chats for users         |
-| `MAX_SUB_LINKS_PER_CHAT` | `5`          | Sub-links per chat (same for both) |
+| Constant                        | Value        | Purpose                                                         |
+| ------------------------------- | ------------ | --------------------------------------------------------------- |
+| `GUEST_COOKIE_NAME`             | `"guest_id"` | Cookie key for guest identity                                   |
+| `GUEST_DAILY_CHAT_LIMIT`        | `3`          | Max new chats per day for guests                                |
+| `GUEST_MESSAGES_PER_CHAT_LIMIT` | `5`          | Max questions per chat for guests (no reset)                    |
+| `USER_MESSAGES_PER_CHAT_LIMIT`  | `30`         | Max questions per chat for users (resets daily at midnight UTC) |
+| `MAX_PINNED_CHATS_GUEST`        | `1`          | Max pinned chats for guests                                     |
+| `MAX_PINNED_CHATS_USER`         | `5`          | Max pinned chats for users                                      |
+| `MAX_SUB_LINKS_PER_CHAT`        | `5`          | Sub-links per chat (same for both)                              |
 
 ### Guest UI Restrictions
 
@@ -129,6 +132,7 @@
 ### Guest Limits
 
 - **3 new chats per day** (resets at midnight UTC)
+- **5 questions per chat** (lifetime limit, no reset)
 - **1 primary URL + up to 5 sub-links per chat**
 - Tracked by counting `Chat` records with the guest's ID created today
 - When limit is reached, UI shows a message prompting registration for unlimited access
@@ -136,6 +140,7 @@
 ### Registered User Limits
 
 - **Unlimited chats**
+- **30 questions per chat** (resets daily at midnight UTC)
 - **1 primary URL + up to 5 sub-links per chat** (same as guest, for context window management)
 
 ---

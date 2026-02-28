@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTimeUntilMidnightUTC } from "@/hooks/use-time-until-midnight-utc";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,7 @@ export function UserMenu({
   authTab: controlledAuthTab,
   onOpenAuth: controlledOnOpenAuth,
 }: UserMenuProps) {
+  const timeUntilReset = useTimeUntilMidnightUTC();
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
   const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">("login");
   const isAuthControlled =
@@ -186,6 +188,9 @@ export function UserMenu({
         {guestRemaining !== undefined && (
           <p className="text-xs text-muted-foreground px-2">
             {guestRemaining}/3 chats remaining today
+            {timeUntilReset && (
+              <span className="ml-1">· {timeUntilReset}</span>
+            )}
           </p>
         )}
         <div className="flex gap-2">

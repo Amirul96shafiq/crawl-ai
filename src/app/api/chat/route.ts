@@ -1,7 +1,12 @@
 import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
+import {
+  GUEST_MESSAGES_PER_CHAT_LIMIT,
+  USER_MESSAGES_PER_CHAT_LIMIT,
+} from "@/lib/constants";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -25,6 +30,38 @@ export async function POST(request: Request) {
 
   if (!chat) {
     return new Response("Chat not found", { status: 404 });
+  }
+
+  const limit =
+    caller.type === "user"
+      ? USER_MESSAGES_PER_CHAT_LIMIT
+      : GUEST_MESSAGES_PER_CHAT_LIMIT;
+
+  const messageCountWhere: { chatId: string; role: string; createdAt?: { gte: Date } } = {
+    chatId,
+    role: "user",
+  };
+  if (caller.type === "user") {
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    messageCountWhere.createdAt = { gte: startOfDay };
+  }
+  const userMessageCount = await prisma.message.count({
+    where: messageCountWhere,
+  });
+  if (userMessageCount >= limit) {
+    const errorMessage =
+      caller.type === "user"
+        ? "Daily question limit reached for this chat."
+        : "Question limit reached for this chat.";
+    return NextResponse.json(
+      {
+        error: errorMessage,
+        limit,
+        remaining: 0,
+      },
+      { status: 429 },
+    );
   }
 
   const pageContext = chat.pages

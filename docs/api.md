@@ -252,18 +252,20 @@ Streaming AI chat endpoint. Uses Vercel AI SDK.
 **Logic:**
 
 1. Identify caller and verify chat ownership
-2. Load all ChatPage content for the chat
-3. Build system prompt with page contents
-4. Call OpenAI via `streamText()` with full message history
-5. Stream response tokens back to the client
-6. After streaming completes, save both user message and assistant response to database
-7. If this is the first exchange, trigger a background title generation call
+2. Check per-chat message limit (guest: 5 total, user: 30 per day); if exceeded, return 429
+3. Load all ChatPage content for the chat
+4. Build system prompt with page contents
+5. Call OpenAI via `streamText()` with full message history
+6. Stream response tokens back to the client
+7. After streaming completes, save both user message and assistant response to database
+8. If this is the first exchange, trigger a background title generation call
 
 **Response:** Streaming text (SSE / ReadableStream)
 
 **Errors:**
 
 - `404` - Chat not found or not owned by caller
+- `429` - Per-chat question limit exceeded (guest: 5 total, user: 30/day). Response: `{ error, limit, remaining: 0 }`
 - `500` - OpenAI API error
 
 ---
