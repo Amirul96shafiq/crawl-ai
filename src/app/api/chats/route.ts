@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity, checkGuestRateLimit } from "@/lib/guest";
 import { crawlUrl } from "@/lib/crawl";
+import { countTokens } from "@/lib/tokens";
 import { MAX_SUB_LINKS_PER_CHAT } from "@/lib/constants";
 
 const DEFAULT_LIMIT = 30;
@@ -130,6 +131,7 @@ export async function POST(request: Request) {
             title: primaryPage.title || null,
             content: primaryPage.content,
             featuredImageUrl: primaryPage.featuredImageUrl ?? null,
+            tokenCount: countTokens(primaryPage.content),
           },
           ...(subPages
             .map((result, i) => {
@@ -139,6 +141,7 @@ export async function POST(request: Request) {
                   title: result.value.title || null,
                   content: result.value.content,
                   featuredImageUrl: result.value.featuredImageUrl ?? null,
+                  tokenCount: countTokens(result.value.content),
                 };
               }
               return null;
@@ -148,12 +151,15 @@ export async function POST(request: Request) {
             title: string | null;
             content: string;
             featuredImageUrl: string | null;
+            tokenCount: number;
           }[]),
         ],
       },
     },
     include: {
-      pages: { select: { url: true, title: true, featuredImageUrl: true } },
+      pages: {
+        select: { url: true, title: true, featuredImageUrl: true, tokenCount: true },
+      },
     },
   });
 

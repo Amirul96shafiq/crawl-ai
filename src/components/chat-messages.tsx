@@ -11,6 +11,8 @@ interface DisplayMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  inputTokens?: number | null;
+  outputTokens?: number | null;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -172,39 +174,67 @@ export function ChatMessages({
         className={cn("mx-auto max-w-3xl", compact ? "space-y-2" : "space-y-6")}
       >
         {featuredImageBlock}
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn(
-              "flex scroll-mt-4 scroll-mb-4",
-              compact ? "gap-2" : "gap-3",
-              message.role === "user" ? "justify-end" : "justify-start",
-            )}
-          >
+        {messages.map((message) => {
+          const tokenCount =
+            message.role === "user"
+              ? message.inputTokens
+              : message.outputTokens;
+          return (
             <div
-              data-message-id={message.id}
+              key={message.id}
               className={cn(
-                "max-w-[85%]",
-                fontSizeClass,
-                lineSpacingClass,
-                compact ? "rounded-lg px-3 py-1.5" : "rounded-2xl px-4 py-2.5",
-                message.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted",
-                message.id === highlightMessageId &&
-                  "ring-4 ring-primary ring-offset-4 ring-offset-background",
+                "flex flex-col scroll-mt-4 scroll-mb-4",
+                compact ? "gap-1" : "gap-1.5",
+                message.role === "user" ? "items-end" : "items-start",
               )}
             >
-              {message.role === "assistant" ? (
-                message.content ? (
-                  <MemoizedMarkdown content={message.content} id={message.id} />
-                ) : null
-              ) : (
-                <span className="whitespace-pre-wrap">{message.content}</span>
+              <div
+                className={cn(
+                  "flex w-full",
+                  compact ? "gap-2" : "gap-3",
+                  message.role === "user" ? "justify-end" : "justify-start",
+                )}
+              >
+                <div
+                  data-message-id={message.id}
+                  className={cn(
+                    message.role === "user"
+                      ? "w-fit max-w-[50%] shrink-0"
+                      : "max-w-[85%]",
+                    fontSizeClass,
+                    lineSpacingClass,
+                    compact
+                      ? "rounded-xl px-3 py-2"
+                      : "rounded-2xl px-4 py-2.5",
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted",
+                    message.id === highlightMessageId &&
+                      "ring-4 ring-primary ring-offset-4 ring-offset-background",
+                  )}
+                >
+                  {message.role === "assistant" ? (
+                    message.content ? (
+                      <MemoizedMarkdown
+                        content={message.content}
+                        id={message.id}
+                      />
+                    ) : null
+                  ) : (
+                    <span className="whitespace-pre-wrap">
+                      {message.content}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {tokenCount != null && tokenCount > 0 && (
+                <span className="text-xs text-muted-foreground/80">
+                  ~{tokenCount.toLocaleString()} tokens
+                </span>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         {isLoading && lastMessage?.role === "user" && (
           <div className={cn("flex", compact ? "gap-2" : "gap-3")}>
             <div

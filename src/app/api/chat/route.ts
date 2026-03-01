@@ -9,6 +9,7 @@ import { openai } from "@ai-sdk/openai";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
+import { countTokens } from "@/lib/tokens";
 import {
   GUEST_MESSAGES_PER_CHAT_LIMIT,
   USER_MESSAGES_PER_CHAT_LIMIT,
@@ -124,7 +125,12 @@ ${pageContext}`;
   const lastUserContent = extractTextFromMessage(lastUserMsg);
 
   await prisma.message.create({
-    data: { chatId, role: "user", content: lastUserContent },
+    data: {
+      chatId,
+      role: "user",
+      content: lastUserContent,
+      inputTokens: countTokens(lastUserContent),
+    },
   });
 
   const apiKey = process.env.OPENAI_API_KEY;
@@ -157,9 +163,18 @@ ${pageContext}`;
       onError: ({ error }) => {
         console.error("Stream error:", error);
       },
-      onFinish: async ({ text }) => {
+      onFinish: async ({ text, usage }) => {
+        const outputTokens =
+          usage?.outputTokens != null && Number.isFinite(usage.outputTokens)
+            ? usage.outputTokens
+            : undefined;
         await prisma.message.create({
-          data: { chatId, role: "assistant", content: text },
+          data: {
+            chatId,
+            role: "assistant",
+            content: text,
+            outputTokens,
+          },
         });
 
         if (isFirstExchange) {

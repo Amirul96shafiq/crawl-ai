@@ -11,17 +11,25 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+interface MessageTokens {
+  inputTokens?: number;
+  outputTokens?: number;
+}
+
 interface ChatViewProps {
   chatId: string;
   pages: {
     url: string;
     title: string | null;
     featuredImageUrl?: string | null;
+    tokenCount?: number | null;
   }[];
   initialMessages: {
     id: string;
     role: "user" | "assistant";
     content: string;
+    inputTokens?: number | null;
+    outputTokens?: number | null;
   }[];
   userMessageLimit: number;
   resetsDaily: boolean;
@@ -41,6 +49,8 @@ export function ChatView({
   const [remainingFromSession, setRemainingFromSession] = useState(
     initialRemainingQuestions,
   );
+  const [fetchedTokens, setFetchedTokens] = useState<MessageTokens[]>([]);
+  const wasLoadingRef = useRef(false);
   const { compact } = useAppearance();
   const searchParams = useSearchParams();
   const highlightMessageId = searchParams.get("highlight") ?? undefined;
@@ -75,15 +85,53 @@ export function ChatView({
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  const displayMessages = messages.map((m) => ({
-    id: m.id,
-    role: m.role as "user" | "assistant",
-    content:
-      m.parts
-        ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-        .map((p) => p.text)
-        .join("") || "",
-  }));
+  useEffect(() => {
+    if (wasLoadingRef.current && !isLoading) {
+      fetch(`/api/chats/${chatId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.messages?.length) {
+            setFetchedTokens(
+              data.messages.map((m: { inputTokens?: number; outputTokens?: number }) => ({
+                inputTokens: m.inputTokens,
+                outputTokens: m.outputTokens,
+              })),
+            );
+          }
+        })
+        .catch(() => {});
+    }
+    wasLoadingRef.current = isLoading;
+  }, [isLoading, chatId]);
+
+  const tokenMap = useMemo(
+    () =>
+      new Map(
+        initialMessages.map((m) => [
+          m.id,
+          { inputTokens: m.inputTokens, outputTokens: m.outputTokens },
+        ]),
+      ),
+    [initialMessages],
+  );
+
+  const displayMessages = messages.map((m, i) => {
+    const fetched = fetchedTokens[i];
+    const initial = tokenMap.get(m.id);
+    const inputTokens = fetched?.inputTokens ?? initial?.inputTokens;
+    const outputTokens = fetched?.outputTokens ?? initial?.outputTokens;
+    return {
+      id: m.id,
+      role: m.role as "user" | "assistant",
+      content:
+        m.parts
+          ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
+          .map((p) => p.text)
+          .join("") || "",
+      inputTokens,
+      outputTokens,
+    };
+  });
 
   const userMessageCount = displayMessages.filter(
     (m) => m.role === "user",
@@ -112,8 +160,8 @@ export function ChatView({
     <div className="flex flex-col h-full">
       <div
         className={cn(
-          "pl-14 pr-4 pt-6 pb-3 md:pl-4",
-          compact && "pr-2 py-2 md:px-2 md:py-2",
+          "px-4 pt-6 pb-3",
+          compact && "py-2 px-2",
         )}
       >
         <UrlBadge pages={pages} />

@@ -64,8 +64,25 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const chat = await prisma.chat.findFirst({
     where: { id, ...ownerWhere },
     include: {
-      pages: { select: { url: true, title: true, featuredImageUrl: true } },
-      messages: { orderBy: { createdAt: "asc" } },
+      pages: {
+        select: {
+          url: true,
+          title: true,
+          featuredImageUrl: true,
+          tokenCount: true,
+        },
+      },
+      messages: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          role: true,
+          content: true,
+          inputTokens: true,
+          outputTokens: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
@@ -97,6 +114,8 @@ export default async function ChatPage({ params }: ChatPageProps) {
         id: m.id,
         role: m.role as "user" | "assistant",
         content: m.content,
+        inputTokens: m.inputTokens ?? undefined,
+        outputTokens: m.outputTokens ?? undefined,
       }))}
       userMessageLimit={userMessageLimit}
       resetsDaily={resetsDaily}

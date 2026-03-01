@@ -18,8 +18,17 @@ export async function GET(
   const chat = await prisma.chat.findFirst({
     where,
     include: {
-      pages: { select: { url: true, title: true } },
-      messages: { orderBy: { createdAt: "asc" } },
+      pages: { select: { url: true, title: true, tokenCount: true } },
+      messages: {
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          role: true,
+          content: true,
+          inputTokens: true,
+          outputTokens: true,
+        },
+      },
     },
   });
   if (!chat) {
@@ -33,6 +42,8 @@ export async function GET(
       id: m.id,
       role: m.role,
       content: m.content,
+      inputTokens: m.inputTokens ?? undefined,
+      outputTokens: m.outputTokens ?? undefined,
     })),
   });
 }

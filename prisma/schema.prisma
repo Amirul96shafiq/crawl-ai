@@ -52,17 +52,20 @@ model ChatPage {
   title             String?
   content           String
   featuredImageUrl  String?
+  tokenCount        Int?
 
   @@index([chatId])
 }
 
 model Message {
-  id        String   @id @default(cuid())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  role      String
-  content   String
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  chatId       String
+  chat         Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role         String
+  content      String
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime @default(now())
 
   @@index([chatId])
 }
