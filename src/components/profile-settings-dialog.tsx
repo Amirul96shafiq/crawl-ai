@@ -64,7 +64,14 @@ export function ProfileSettingsDialog({
 }: ProfileSettingsDialogProps) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const { compact, setCompact } = useAppearance();
+  const {
+    compact,
+    setCompact,
+    chatFontSize,
+    setChatFontSize,
+    chatLineSpacing,
+    setChatLineSpacing,
+  } = useAppearance();
   const [tab, setTab] = useState<SettingsTab>("profile");
   const [name, setName] = useState(user.name ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -497,6 +504,62 @@ export function ProfileSettingsDialog({
               </div>
               <p className="text-xs text-muted-foreground">
                 Reduce spacing in chat for a denser layout
+              </p>
+            </div>
+            <div className="space-y-3 pt-3 border-t">
+              <h4 className="text-sm font-medium">Chat</h4>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Font size</Label>
+                <div className="flex gap-2">
+                  {(["small", "default", "large"] as const).map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => {
+                        setChatFontSize(size);
+                        toast.success(
+                          `Font size set to ${size.charAt(0).toUpperCase() + size.slice(1)}`,
+                        );
+                      }}
+                      className={cn(
+                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                        chatFontSize === size
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-input hover:bg-accent",
+                      )}
+                    >
+                      {size.charAt(0).toUpperCase() + size.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-muted-foreground">Line spacing</Label>
+                <div className="flex gap-2">
+                  {(["tight", "default", "relaxed"] as const).map((spacing) => (
+                    <button
+                      key={spacing}
+                      type="button"
+                      onClick={() => {
+                        setChatLineSpacing(spacing);
+                        toast.success(
+                          `Line spacing set to ${spacing.charAt(0).toUpperCase() + spacing.slice(1)}`,
+                        );
+                      }}
+                      className={cn(
+                        "flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                        chatLineSpacing === spacing
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-input hover:bg-accent",
+                      )}
+                    >
+                      {spacing.charAt(0).toUpperCase() + spacing.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Customize font size and line spacing in chat messages
               </p>
             </div>
           </div>

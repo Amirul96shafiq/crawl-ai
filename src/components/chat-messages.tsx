@@ -25,7 +25,20 @@ export function ChatMessages({
   highlightMessageId,
 }: ChatMessagesProps) {
   const scrollRef = useScrollToBottom<HTMLDivElement>(messages);
-  const { compact } = useAppearance();
+  const { compact, chatFontSize, chatLineSpacing } = useAppearance();
+
+  const fontSizeClass =
+    chatFontSize === "small"
+      ? "text-xs"
+      : chatFontSize === "large"
+        ? "text-base"
+        : "text-sm";
+  const lineSpacingClass =
+    chatLineSpacing === "tight"
+      ? "leading-snug"
+      : chatLineSpacing === "relaxed"
+        ? "leading-loose"
+        : "leading-relaxed";
 
   useEffect(() => {
     if (!highlightMessageId || !scrollRef.current) return;
@@ -77,7 +90,9 @@ export function ChatMessages({
             <div
               data-message-id={message.id}
               className={cn(
-                "max-w-[85%] text-sm leading-relaxed",
+                "max-w-[85%]",
+                fontSizeClass,
+                lineSpacingClass,
                 compact ? "rounded-lg px-3 py-1.5" : "rounded-2xl px-4 py-2.5",
                 message.role === "user"
                   ? "bg-primary text-primary-foreground"
