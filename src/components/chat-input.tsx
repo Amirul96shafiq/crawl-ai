@@ -55,7 +55,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
     }
 
     return (
-      <div className={cn("bg-background", compact ? "p-2" : "p-4")}>
+      <div className={cn(compact ? "p-2" : "p-4")}>
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           {remainingQuestions !== undefined && questionLimit !== undefined && (
             <p className="text-xs text-muted-foreground">

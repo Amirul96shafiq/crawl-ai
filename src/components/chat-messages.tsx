@@ -156,7 +156,7 @@ export function ChatMessages({
     }
 
     return (
-      <div className="min-h-[calc(100vh-14rem)] flex flex-col items-center justify-center text-muted-foreground">
+      <div className="h-full min-h-full flex flex-col items-center justify-center text-muted-foreground py-8">
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
           {featuredImageBlock}
           <div className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">

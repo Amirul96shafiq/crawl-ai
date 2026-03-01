@@ -172,40 +172,42 @@ export function ChatView({
   return (
     <div
       ref={scrollRef}
-      className="h-full min-h-0 overflow-y-auto"
+      className="h-full overflow-y-auto"
     >
-      <div
-        className={cn(
-          "sticky top-0 z-10 shrink-0 bg-background px-4 pt-6 pb-3",
-          compact && "py-2 px-2",
-        )}
-      >
-        <UrlBadge pages={pages} />
-      </div>
-      <div className="min-h-[calc(100%-10rem)] pb-28">
-        <ChatMessages
-          scrollRef={scrollRef}
-          messages={displayMessages}
-          isLoading={isLoading}
-          highlightMessageId={highlightMessageId}
-          featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
-          primaryPageUrl={pages[0]?.url}
-          pages={pages}
-          onSuggestionClick={handleSuggestionClick}
-        />
-      </div>
-      <div className="sticky bottom-0 z-10 shrink-0 bg-background">
-        <ChatInput
-          ref={inputRef}
-          input={input}
-          onChange={setInput}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          disabled={!canSendMessage}
-          remainingQuestions={remainingQuestions}
-          questionLimit={userMessageLimit}
-          resetsDaily={resetsDaily}
-        />
+      <div className="min-h-full flex flex-col">
+        <div
+          className={cn(
+            "sticky top-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 pt-6 pb-3",
+            compact && "py-2 px-2",
+          )}
+        >
+          <UrlBadge pages={pages} />
+        </div>
+        <div className="flex-1 flex flex-col pb-4">
+          <ChatMessages
+            scrollRef={scrollRef}
+            messages={displayMessages}
+            isLoading={isLoading}
+            highlightMessageId={highlightMessageId}
+            featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
+            primaryPageUrl={pages[0]?.url}
+            pages={pages}
+            onSuggestionClick={handleSuggestionClick}
+          />
+        </div>
+        <div className="sticky bottom-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <ChatInput
+            ref={inputRef}
+            input={input}
+            onChange={setInput}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            disabled={!canSendMessage}
+            remainingQuestions={remainingQuestions}
+            questionLimit={userMessageLimit}
+            resetsDaily={resetsDaily}
+          />
+        </div>
       </div>
     </div>
   );
