@@ -234,6 +234,7 @@ export function ArchiveView() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
+                    onClick={(e) => e.stopPropagation()}
                     onSelect={() => setDeleteConfirmChatId(chat.id)}
                   >
                     <Trash2 />
