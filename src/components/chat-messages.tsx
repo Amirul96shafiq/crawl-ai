@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useAppearance } from "@/components/appearance-provider";
+import { MemoizedMarkdown } from "@/components/memoized-markdown";
 import { Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -76,7 +77,7 @@ export function ChatMessages({
             <div
               data-message-id={message.id}
               className={cn(
-                "max-w-[85%] whitespace-pre-wrap text-sm leading-relaxed",
+                "max-w-[85%] text-sm leading-relaxed",
                 compact ? "rounded-lg px-3 py-1.5" : "rounded-2xl px-4 py-2.5",
                 message.role === "user"
                   ? "bg-primary text-primary-foreground"
@@ -85,7 +86,13 @@ export function ChatMessages({
                   "ring-4 ring-primary ring-offset-4 ring-offset-background",
               )}
             >
-              {message.content}
+              {message.role === "assistant" ? (
+                message.content ? (
+                  <MemoizedMarkdown content={message.content} id={message.id} />
+                ) : null
+              ) : (
+                <span className="whitespace-pre-wrap">{message.content}</span>
+              )}
             </div>
           </div>
         ))}

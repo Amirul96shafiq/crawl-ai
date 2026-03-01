@@ -76,6 +76,8 @@ export async function POST(request: Request) {
 
   const systemMessage = `You are a helpful assistant named Echologue. Answer questions based on the following webpage contents. If the answer is not found in the provided content, say so clearly.
 
+Use Markdown formatting when helpful: **bold** for emphasis, lists for multiple items, \`code\` for technical terms, and headings for structure.
+
 ${pageContext}`;
 
   const isFirstExchange = chat.messages.length === 0;
@@ -111,7 +113,7 @@ ${pageContext}`;
     const modelMessages = await convertToModelMessages(messages);
 
     const result = streamText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-4.1-nano"),
       system: systemMessage,
       messages: modelMessages,
       onError: ({ error }) => {
@@ -162,7 +164,7 @@ function extractTextFromMessage(msg: Record<string, unknown> | undefined): strin
 
 async function generateTitle(chatId: string, firstMessage: string) {
   const { text } = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: openai("gpt-4.1-nano"),
     prompt: `Generate a short title (max 6 words) for a conversation that starts with this question. Return ONLY the title, no quotes or punctuation around it:\n\n"${firstMessage}"`,
     maxOutputTokens: 20,
   });
