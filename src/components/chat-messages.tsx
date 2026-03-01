@@ -13,12 +13,22 @@ interface DisplayMessage {
   content: string;
 }
 
+const SUGGESTED_QUESTIONS = [
+  "Summarize the main points",
+  "What are the key takeaways?",
+  "Explain this in simpler terms",
+  "What questions does this article answer?",
+  "Are there important caveats or limitations?",
+] as const;
+
 interface ChatMessagesProps {
   messages: DisplayMessage[];
   isLoading: boolean;
   highlightMessageId?: string;
   featuredImageUrl?: string | null;
   primaryPageUrl?: string;
+  pages?: { url: string; title: string | null }[];
+  onSuggestionClick?: (text: string) => void;
 }
 
 export function ChatMessages({
@@ -27,6 +37,8 @@ export function ChatMessages({
   highlightMessageId,
   featuredImageUrl,
   primaryPageUrl,
+  pages,
+  onSuggestionClick,
 }: ChatMessagesProps) {
   const scrollRef = useScrollToBottom<HTMLDivElement>(messages);
   const { compact, chatFontSize, chatLineSpacing } = useAppearance();
@@ -92,18 +104,54 @@ export function ChatMessages({
   );
 
   if (!messages.length) {
+    let pageContext: string | null = null;
+    if (pages && pages.length > 0) {
+      const firstTitle =
+        pages[0].title ||
+        (() => {
+          try {
+            return new URL(pages[0].url).hostname;
+          } catch {
+            return "the page";
+          }
+        })();
+      pageContext =
+        pages.length === 1
+          ? `Content from: ${firstTitle}`
+          : `You've loaded ${pages.length} pages`;
+    }
+
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground overflow-y-auto">
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
           {featuredImageBlock}
-          <div className="text-center space-y-2">
-            <Bot className="h-12 w-12 mx-auto opacity-50" />
-            <p className="text-lg font-medium">
-              Ask anything about the crawled page(s)
-            </p>
-            <p className="text-sm">
-              Your questions will be answered based on the page content
-            </p>
+          <div className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <Bot className="h-12 w-12 mx-auto opacity-50" />
+              <div className="space-y-2">
+                <p className="text-lg font-medium">Ready to explore</p>
+                <p className="text-sm">
+                  Ask anything about the crawled page(s)
+                </p>
+                {pageContext && (
+                  <p className="text-xs text-muted-foreground">{pageContext}</p>
+                )}
+              </div>
+              {onSuggestionClick && (
+                <div className="flex flex-wrap gap-2 justify-center pt-2">
+                  {SUGGESTED_QUESTIONS.map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => onSuggestionClick(q)}
+                      className="rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

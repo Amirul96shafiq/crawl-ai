@@ -7,7 +7,7 @@ import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
 import { useAppearance } from "@/components/appearance-provider";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -37,6 +37,7 @@ export function ChatView({
   initialRemainingQuestions,
 }: ChatViewProps) {
   const [input, setInput] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [remainingFromSession, setRemainingFromSession] = useState(
     initialRemainingQuestions,
   );
@@ -92,6 +93,11 @@ export function ChatView({
     : userMessageLimit - userMessageCount;
   const canSendMessage = remainingQuestions > 0;
 
+  function handleSuggestionClick(text: string) {
+    setInput(text);
+    inputRef.current?.focus();
+  }
+
   function handleSubmit() {
     if (!input.trim() || isLoading || !canSendMessage) return;
     const text = input;
@@ -118,8 +124,11 @@ export function ChatView({
         highlightMessageId={highlightMessageId}
         featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
         primaryPageUrl={pages[0]?.url}
+        pages={pages}
+        onSuggestionClick={handleSuggestionClick}
       />
       <ChatInput
+        ref={inputRef}
         input={input}
         onChange={setInput}
         onSubmit={handleSubmit}
