@@ -128,6 +128,7 @@ export function UserMenu({
             <DropdownMenuShortcut>Alt+,</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem
+            variant="destructive"
             onClick={async () => {
               const { signOut } = await import("next-auth/react");
               await signOut({ redirectTo: "/" });
