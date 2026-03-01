@@ -116,6 +116,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
         content: m.content,
         inputTokens: m.inputTokens ?? undefined,
         outputTokens: m.outputTokens ?? undefined,
+        createdAt: m.createdAt.toISOString(),
       }))}
       userMessageLimit={userMessageLimit}
       resetsDaily={resetsDaily}

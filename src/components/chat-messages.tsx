@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
-import { Bot } from "lucide-react";
+import { Bot, Calendar, Clock, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface DisplayMessage {
   id: string;
@@ -13,6 +19,7 @@ interface DisplayMessage {
   content: string;
   inputTokens?: number | null;
   outputTokens?: number | null;
+  createdAt?: string | null;
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -227,11 +234,62 @@ export function ChatMessages({
                   )}
                 </div>
               </div>
-              {tokenCount != null && tokenCount > 0 && (
-                <span className="text-xs text-muted-foreground/80">
-                  ~{tokenCount.toLocaleString()} tokens
-                </span>
-              )}
+              <div
+                className={cn(
+                  "flex items-center gap-1",
+                  message.role === "user" ? "justify-end" : "justify-start",
+                )}
+              >
+                {message.role === "user" && tokenCount != null && tokenCount > 0 && (
+                  <span className="text-xs text-muted-foreground/80">
+                    ~{tokenCount.toLocaleString()} tokens
+                  </span>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      className="h-6 w-6 text-muted-foreground/80 hover:text-muted-foreground"
+                    >
+                      <MoreHorizontal className="size-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align={message.role === "user" ? "end" : "start"}
+                    side="top"
+                    className="min-w-48"
+                  >
+                    <div className="px-2 py-2 text-xs space-y-1.5">
+                      {message.createdAt ? (
+                        <>
+                          <p className="flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="size-3.5 shrink-0" />
+                            {new Date(message.createdAt).toLocaleDateString(
+                              undefined,
+                              { dateStyle: "medium" },
+                            )}
+                          </p>
+                          <p className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="size-3.5 shrink-0" />
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              undefined,
+                              { timeStyle: "short" },
+                            )}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-muted-foreground">—</p>
+                      )}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {message.role === "assistant" && tokenCount != null && tokenCount > 0 && (
+                  <span className="text-xs text-muted-foreground/80">
+                    ~{tokenCount.toLocaleString()} tokens
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}

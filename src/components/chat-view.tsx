@@ -30,6 +30,7 @@ interface ChatViewProps {
     content: string;
     inputTokens?: number | null;
     outputTokens?: number | null;
+    createdAt?: string;
   }[];
   userMessageLimit: number;
   resetsDaily: boolean;
@@ -104,12 +105,16 @@ export function ChatView({
     wasLoadingRef.current = isLoading;
   }, [isLoading, chatId]);
 
-  const tokenMap = useMemo(
+  const initialMap = useMemo(
     () =>
       new Map(
         initialMessages.map((m) => [
           m.id,
-          { inputTokens: m.inputTokens, outputTokens: m.outputTokens },
+          {
+            inputTokens: m.inputTokens,
+            outputTokens: m.outputTokens,
+            createdAt: m.createdAt,
+          },
         ]),
       ),
     [initialMessages],
@@ -117,9 +122,13 @@ export function ChatView({
 
   const displayMessages = messages.map((m, i) => {
     const fetched = fetchedTokens[i];
-    const initial = tokenMap.get(m.id);
+    const initial = initialMap.get(m.id);
     const inputTokens = fetched?.inputTokens ?? initial?.inputTokens;
     const outputTokens = fetched?.outputTokens ?? initial?.outputTokens;
+    const createdAt =
+      initial?.createdAt ??
+      (m as { createdAt?: Date }).createdAt?.toISOString?.() ??
+      new Date().toISOString();
     return {
       id: m.id,
       role: m.role as "user" | "assistant",
@@ -130,6 +139,7 @@ export function ChatView({
           .join("") || "",
       inputTokens,
       outputTokens,
+      createdAt,
     };
   });
 
