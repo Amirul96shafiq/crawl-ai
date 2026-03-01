@@ -125,7 +125,9 @@ ${pageContext}`;
         });
 
         if (isFirstExchange) {
-          generateTitle(chatId, lastUserContent).catch(() => {});
+          generateTitle(chatId, lastUserContent).catch((err) => {
+            console.error("[generateTitle] Failed:", err);
+          });
         }
       },
     });

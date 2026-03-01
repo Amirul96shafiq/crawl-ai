@@ -115,6 +115,7 @@ export async function POST(request: Request) {
   const chat = await prisma.chat.create({
     data: {
       ...ownerData,
+      title: primaryPage.title?.trim() || null,
       pages: {
         create: [
           {
