@@ -1,4 +1,10 @@
-import { streamText, createUIMessageStream, createUIMessageStreamResponse } from "ai";
+import {
+  streamText,
+  generateText,
+  convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai";
 import { openai } from "@ai-sdk/openai";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
@@ -102,10 +108,12 @@ ${pageContext}`;
   }
 
   try {
+    const modelMessages = await convertToModelMessages(messages);
+
     const result = streamText({
       model: openai("gpt-4o-mini"),
       system: systemMessage,
-      messages,
+      messages: modelMessages,
       onError: ({ error }) => {
         console.error("Stream error:", error);
       },
@@ -153,8 +161,6 @@ function extractTextFromMessage(msg: Record<string, unknown> | undefined): strin
 }
 
 async function generateTitle(chatId: string, firstMessage: string) {
-  const { generateText } = await import("ai");
-
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
     prompt: `Generate a short title (max 6 words) for a conversation that starts with this question. Return ONLY the title, no quotes or punctuation around it:\n\n"${firstMessage}"`,
