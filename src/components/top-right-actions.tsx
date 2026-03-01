@@ -9,7 +9,14 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Sun, Moon, Monitor, PanelLeftClose, PanelLeft, Search } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Monitor,
+  PanelLeftClose,
+  PanelLeft,
+  Search,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SearchDialog } from "@/components/search-dialog";
@@ -28,8 +35,7 @@ function ThemeIcon({ theme }: { theme: Theme }) {
   }
 }
 
-const buttonBaseClass =
-  "h-9 w-9 shrink-0 rounded-none hover:bg-accent";
+const buttonBaseClass = "h-9 w-9 shrink-0 rounded-none hover:bg-accent";
 
 interface TopRightActionsProps {
   user: { name?: string | null; email?: string | null } | null;
@@ -83,9 +89,7 @@ export function TopRightActions({
             <Search className="h-5 w-5" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent side="left">
-          Search chats (Alt+/)
-        </TooltipContent>
+        <TooltipContent side="left">Search chats (Alt+/)</TooltipContent>
       </Tooltip>
       <div className="h-px w-full shrink-0 bg-border" />
       <Tooltip>
@@ -121,7 +125,9 @@ export function TopRightActions({
             size="icon"
             className={cn(buttonBaseClass, "hidden md:inline-flex")}
             onClick={onSidebarCollapseToggle}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
           >
             {sidebarCollapsed ? (
               <PanelLeft className="h-5 w-5" />
@@ -131,7 +137,9 @@ export function TopRightActions({
           </Button>
         </TooltipTrigger>
         <TooltipContent side="left">
-          {sidebarCollapsed ? "Expand sidebar (Alt+B)" : "Collapse sidebar (Alt+B)"}
+          {sidebarCollapsed
+            ? "Expand sidebar (Alt+B)"
+            : "Collapse sidebar (Alt+B)"}
         </TooltipContent>
       </Tooltip>
       <SearchDialog

@@ -13,7 +13,10 @@ function hasOpenDialogOrSheet(): boolean {
 }
 
 function updateDialogOpenClass() {
-  document.documentElement.classList.toggle(DIALOG_OPEN_CLASS, hasOpenDialogOrSheet());
+  document.documentElement.classList.toggle(
+    DIALOG_OPEN_CLASS,
+    hasOpenDialogOrSheet(),
+  );
 }
 
 export function DialogOverlayTracker() {

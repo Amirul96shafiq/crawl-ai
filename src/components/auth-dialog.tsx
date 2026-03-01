@@ -14,7 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, ShieldAlert, Shield, ShieldCheck, RefreshCw } from "lucide-react";
+import {
+  Loader2,
+  ShieldAlert,
+  Shield,
+  ShieldCheck,
+  RefreshCw,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn, generateStrongPassword, getPasswordScore } from "@/lib/utils";
 
@@ -114,7 +120,9 @@ export function AuthDialog({
       });
 
       if (result?.error) {
-        toast.error("Account created but login failed. Please log in manually.");
+        toast.error(
+          "Account created but login failed. Please log in manually.",
+        );
         setLoading(false);
         return;
       }
@@ -170,7 +178,10 @@ export function AuthDialog({
 
         <div className="flex flex-col h-[min(340px,55vh)] shrink-0 min-h-0">
           {tab === "login" ? (
-            <form onSubmit={handleLogin} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
+            <form
+              onSubmit={handleLogin}
+              className="flex flex-col flex-1 min-h-0 px-6 pb-6"
+            >
               <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
                 <div className="space-y-2">
                   <Label htmlFor="auth-email">Email</Label>
@@ -195,13 +206,20 @@ export function AuthDialog({
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full shrink-0 mt-4" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full shrink-0 mt-4"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Log in
               </Button>
             </form>
           ) : (
-            <form onSubmit={handleRegister} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
+            <form
+              onSubmit={handleRegister}
+              className="flex flex-col flex-1 min-h-0 px-6 pb-6"
+            >
               <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
                 <div className="space-y-2">
                   <Label htmlFor="auth-name">Name (optional)</Label>
@@ -262,7 +280,7 @@ export function AuthDialog({
                                 : score === 2
                                   ? "bg-amber-500"
                                   : "bg-emerald-500"
-                              : "bg-muted"
+                              : "bg-muted",
                           )}
                         />
                       );
@@ -298,7 +316,11 @@ export function AuthDialog({
                   )}
                 </div>
               </div>
-              <Button type="submit" className="w-full shrink-0 mt-4" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full shrink-0 mt-4"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Create account
               </Button>

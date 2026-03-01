@@ -69,7 +69,10 @@ import {
 const STORAGE_KEY_PREFIX = "chat-order-";
 const MAX_CHAT_TITLE_LENGTH = 28;
 
-function truncateTitle(title: string, maxLen: number = MAX_CHAT_TITLE_LENGTH): string {
+function truncateTitle(
+  title: string,
+  maxLen: number = MAX_CHAT_TITLE_LENGTH,
+): string {
   const t = title.trim();
   if (t.length <= maxLen) return t;
   return t.slice(0, maxLen).trim() + "...";
@@ -202,7 +205,10 @@ function SortableChatItem({
   }, [chat.title]);
 
   const saveRename = useCallback(() => {
-    const trimmed = (editValue.trim() || "New Chat").slice(0, MAX_CHAT_TITLE_LENGTH);
+    const trimmed = (editValue.trim() || "New Chat").slice(
+      0,
+      MAX_CHAT_TITLE_LENGTH,
+    );
     if (trimmed !== (chat.title || "New Chat")) {
       onRename(chat.id, trimmed);
     }
@@ -238,7 +244,9 @@ function SortableChatItem({
           ref={inputRef}
           value={editValue}
           maxLength={MAX_CHAT_TITLE_LENGTH}
-          onChange={(e) => setEditValue(e.target.value.slice(0, MAX_CHAT_TITLE_LENGTH))}
+          onChange={(e) =>
+            setEditValue(e.target.value.slice(0, MAX_CHAT_TITLE_LENGTH))
+          }
           onBlur={saveRename}
           onKeyDown={(e) => {
             if (e.key === "Enter") saveRename();
@@ -458,8 +466,11 @@ function SidebarContent({
   useEffect(() => {
     const scrollArea = scrollAreaRef.current;
     const sentinel = sentinelRef.current;
-    if (!scrollArea || !sentinel || !hasMore || loadingMore || !onLoadMore) return;
-    const viewport = scrollArea.querySelector("[data-slot=scroll-area-viewport]");
+    if (!scrollArea || !sentinel || !hasMore || loadingMore || !onLoadMore)
+      return;
+    const viewport = scrollArea.querySelector(
+      "[data-slot=scroll-area-viewport]",
+    );
     if (!viewport) return;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -494,12 +505,7 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div
-        className={cn(
-          "flex items-center gap-4",
-          compact ? "p-2" : "p-3",
-        )}
-      >
+      <div className={cn("flex items-center gap-4", compact ? "p-2" : "p-3")}>
         <Button size="icon" className="h-9 w-9 shrink-0" asChild>
           <Link href="/" aria-label="Go to home">
             <span className="text-sm font-semibold">E</span>
@@ -545,7 +551,12 @@ function SidebarContent({
                           compact ? "p-1" : "p-2 pb-1",
                         )}
                       >
-                        <div className={cn("space-y-1", compact ? "space-y-0.5" : "")}>
+                        <div
+                          className={cn(
+                            "space-y-1",
+                            compact ? "space-y-0.5" : "",
+                          )}
+                        >
                           {pinnedChats.map((chat) => (
                             <SortableChatItem
                               key={chat.id}
@@ -622,12 +633,7 @@ function SidebarContent({
           </DndContext>
         ) : (
           <ScrollArea className="flex-1 min-h-0">
-            <div
-              className={cn(
-                "space-y-1 min-w-0",
-                compact ? "p-1" : "p-2",
-              )}
-            >
+            <div className={cn("space-y-1 min-w-0", compact ? "p-1" : "p-2")}>
               {(initialLoading || loadingMore) &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <div
@@ -651,7 +657,8 @@ function SidebarContent({
                       <Plus className="h-4 w-4" />
                       New Chat
                     </span>{" "}
-                    above and paste a URL to crawl and chat with AI about any webpage
+                    above and paste a URL to crawl and chat with AI about any
+                    webpage
                   </p>
                 </div>
               )}
@@ -696,12 +703,17 @@ export function ChatSidebar({
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
-  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">("login");
+  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">(
+    "login",
+  );
 
   const isAuthControlled =
-    controlledAuthOpen !== undefined && controlledOnAuthOpenChange !== undefined;
+    controlledAuthOpen !== undefined &&
+    controlledOnAuthOpenChange !== undefined;
   const authOpen = isAuthControlled ? controlledAuthOpen! : internalAuthOpen;
-  const setAuthOpen = isAuthControlled ? controlledOnAuthOpenChange! : setInternalAuthOpen;
+  const setAuthOpen = isAuthControlled
+    ? controlledOnAuthOpenChange!
+    : setInternalAuthOpen;
   const authTab = controlledAuthTab ?? internalAuthTab;
   const internalOpenAuth = useCallback((tab: "login" | "register") => {
     setInternalAuthTab(tab);
@@ -797,9 +809,7 @@ export function ChatSidebar({
   }, [loadingMore, hasMore, fetchChats]);
 
   function handleReorder(orderedIds: string[]) {
-    const pinnedIds = new Set(
-      chats.filter((c) => c.pinnedAt).map((c) => c.id),
-    );
+    const pinnedIds = new Set(chats.filter((c) => c.pinnedAt).map((c) => c.id));
     const orderedPinned = orderedIds.filter((id) => pinnedIds.has(id));
     const orderedUnpinned = orderedIds.filter((id) => !pinnedIds.has(id));
     const sanitizedIds = [...orderedPinned, ...orderedUnpinned];
@@ -840,7 +850,9 @@ export function ChatSidebar({
       if (res.ok) {
         setChats((prev) => prev.filter((c) => c.id !== id));
         if (identityKey) {
-          const orderedIds = getStoredOrder(identityKey).filter((cid) => cid !== id);
+          const orderedIds = getStoredOrder(identityKey).filter(
+            (cid) => cid !== id,
+          );
           saveOrder(identityKey, orderedIds);
         }
         if (activeChatId === id) {
@@ -897,7 +909,11 @@ export function ChatSidebar({
             : c,
         );
         const sorted = sortChatsWithPinnedFirst(updated);
-        if (identityKey) saveOrder(identityKey, sorted.map((c) => c.id));
+        if (identityKey)
+          saveOrder(
+            identityKey,
+            sorted.map((c) => c.id),
+          );
         setChats(sorted);
         await fetchChats(false);
         toast.success(pinned ? "Chat pinned" : "Chat unpinned");
@@ -948,35 +964,36 @@ export function ChatSidebar({
               <Plus className="h-4 w-4" />
             </Button>
           </NewChatDialog>
-          {collapsed && (() => {
-            const pinnedChats = chats.filter((c) => c.pinnedAt);
-            return pinnedChats.length > 0 ? (
-              <ScrollArea className="flex-1 min-h-0 w-full px-1">
-                <div className="flex flex-col items-center gap-1 py-2">
-                  {pinnedChats.map((chat) => (
-                    <Tooltip key={chat.id}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={cn(
-                            "h-8 w-8 shrink-0",
-                            activeChatId === chat.id && "bg-accent",
-                          )}
-                          onClick={() => handleNavigateToChat(chat.id)}
-                        >
-                          <Pin className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        {chat.title || "New Chat"}
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
-                </div>
-              </ScrollArea>
-            ) : null;
-          })()}
+          {collapsed &&
+            (() => {
+              const pinnedChats = chats.filter((c) => c.pinnedAt);
+              return pinnedChats.length > 0 ? (
+                <ScrollArea className="flex-1 min-h-0 w-full px-1">
+                  <div className="flex flex-col items-center gap-1 py-2">
+                    {pinnedChats.map((chat) => (
+                      <Tooltip key={chat.id}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "h-8 w-8 shrink-0",
+                              activeChatId === chat.id && "bg-accent",
+                            )}
+                            onClick={() => handleNavigateToChat(chat.id)}
+                          >
+                            <Pin className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          {chat.title || "New Chat"}
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                  </div>
+                </ScrollArea>
+              ) : null;
+            })()}
           <div className="mt-auto shrink-0">
             <UserMenu
               user={user}

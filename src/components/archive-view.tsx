@@ -45,9 +45,13 @@ export function ArchiveView() {
   const [chats, setChats] = useState<ArchivedChatItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState<ChatWithMessages | null>(null);
+  const [selectedChat, setSelectedChat] = useState<ChatWithMessages | null>(
+    null,
+  );
   const [loadingChat, setLoadingChat] = useState(false);
-  const [deleteConfirmChatId, setDeleteConfirmChatId] = useState<string | null>(null);
+  const [deleteConfirmChatId, setDeleteConfirmChatId] = useState<string | null>(
+    null,
+  );
 
   const [identityKey, setIdentityKey] = useState<string | null>(null);
 
@@ -191,7 +195,8 @@ export function ArchiveView() {
               <Archive className="h-3 w-3" />
               Archive
             </span>{" "}
-            option in the chat menu <b>(⋮)</b> on the sidebar to move chats here.
+            option in the chat menu <b>(⋮)</b> on the sidebar to move chats
+            here.
           </p>
         </div>
       ) : (

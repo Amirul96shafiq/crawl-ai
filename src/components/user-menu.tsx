@@ -54,11 +54,16 @@ export function UserMenu({
 }: UserMenuProps) {
   const timeUntilReset = useTimeUntilMidnightUTC();
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);
-  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">("login");
+  const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">(
+    "login",
+  );
   const isAuthControlled =
-    controlledAuthOpen !== undefined && controlledOnAuthOpenChange !== undefined;
+    controlledAuthOpen !== undefined &&
+    controlledOnAuthOpenChange !== undefined;
   const authOpen = isAuthControlled ? controlledAuthOpen! : internalAuthOpen;
-  const setAuthOpen = isAuthControlled ? controlledOnAuthOpenChange! : setInternalAuthOpen;
+  const setAuthOpen = isAuthControlled
+    ? controlledOnAuthOpenChange!
+    : setInternalAuthOpen;
   const authTab = controlledAuthTab ?? internalAuthTab;
   const [internalSettingsOpen, setInternalSettingsOpen] = useState(false);
 
@@ -103,24 +108,37 @@ export function UserMenu({
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Avatar className="h-7 w-7">
                     {user.image && (
-                      <AvatarImage src={user.image} alt={user.name || "Avatar"} />
+                      <AvatarImage
+                        src={user.image}
+                        alt={user.name || "Avatar"}
+                      />
                     )}
-                    <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                    <AvatarFallback className="text-xs">
+                      {initials}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               ) : (
-            <Button variant="ghost" className="w-full justify-start gap-2 px-2">
-              <Avatar className="h-7 w-7">
-                {user.image && (
-                  <AvatarImage src={user.image} alt={user.name || "Avatar"} />
-                )}
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="truncate text-sm">
-                {user.name || user.email}
-              </span>
-            </Button>
-          )}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-2 px-2"
+                >
+                  <Avatar className="h-7 w-7">
+                    {user.image && (
+                      <AvatarImage
+                        src={user.image}
+                        alt={user.name || "Avatar"}
+                      />
+                    )}
+                    <AvatarFallback className="text-xs">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-sm">
+                    {user.name || user.email}
+                  </span>
+                </Button>
+              )}
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="right">Account menu</TooltipContent>
@@ -199,9 +217,7 @@ export function UserMenu({
         {guestRemaining !== undefined && (
           <p className="text-xs text-muted-foreground px-2">
             {guestRemaining}/3 chats remaining today
-            {timeUntilReset && (
-              <span className="ml-1">· {timeUntilReset}</span>
-            )}
+            {timeUntilReset && <span className="ml-1">· {timeUntilReset}</span>}
           </p>
         )}
         <div className="flex gap-2">

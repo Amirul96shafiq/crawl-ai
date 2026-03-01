@@ -13,8 +13,16 @@ import { toast } from "sonner";
 
 interface ChatViewProps {
   chatId: string;
-  pages: { url: string; title: string | null }[];
-  initialMessages: { id: string; role: "user" | "assistant"; content: string }[];
+  pages: {
+    url: string;
+    title: string | null;
+    featuredImageUrl?: string | null;
+  }[];
+  initialMessages: {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+  }[];
   userMessageLimit: number;
   resetsDaily: boolean;
   initialRemainingQuestions: number;
@@ -54,7 +62,8 @@ export function ChatView({
   useEffect(() => {
     if (error) {
       const message =
-        error.message?.includes("429") || error.message?.toLowerCase().includes("limit")
+        error.message?.includes("429") ||
+        error.message?.toLowerCase().includes("limit")
           ? resetsDaily
             ? "Daily question limit reached for this chat."
             : "Question limit reached for this chat."
@@ -75,7 +84,9 @@ export function ChatView({
         .join("") || "",
   }));
 
-  const userMessageCount = displayMessages.filter((m) => m.role === "user").length;
+  const userMessageCount = displayMessages.filter(
+    (m) => m.role === "user",
+  ).length;
   const remainingQuestions = resetsDaily
     ? remainingFromSession
     : userMessageLimit - userMessageCount;
@@ -105,6 +116,8 @@ export function ChatView({
         messages={displayMessages}
         isLoading={isLoading}
         highlightMessageId={highlightMessageId}
+        featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
+        primaryPageUrl={pages[0]?.url}
       />
       <ChatInput
         input={input}

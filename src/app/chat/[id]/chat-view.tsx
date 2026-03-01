@@ -10,7 +10,11 @@ import { useMemo, useState } from "react";
 interface ChatViewProps {
   chatId: string;
   pages: { url: string; title: string | null }[];
-  initialMessages: { id: string; role: "user" | "assistant"; content: string }[];
+  initialMessages: {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+  }[];
 }
 
 export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
@@ -55,10 +59,7 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
       <div className="pl-14 pr-4 pt-6 pb-3 md:pl-4">
         <UrlBadge pages={pages} />
       </div>
-      <ChatMessages
-        messages={displayMessages}
-        isLoading={isLoading}
-      />
+      <ChatMessages messages={displayMessages} isLoading={isLoading} />
       <ChatInput
         input={input}
         onChange={setInput}

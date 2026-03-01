@@ -5,7 +5,10 @@ import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "./input";
 
-interface PasswordInputProps extends Omit<React.ComponentProps<typeof Input>, "type"> {}
+interface PasswordInputProps extends Omit<
+  React.ComponentProps<typeof Input>,
+  "type"
+> {}
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   ({ className, ...props }, ref) => {
@@ -34,7 +37,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         </button>
       </div>
     );
-  }
+  },
 );
 
 PasswordInput.displayName = "PasswordInput";

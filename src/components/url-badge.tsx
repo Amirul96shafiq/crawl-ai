@@ -29,19 +29,13 @@ export function UrlBadge({ pages }: UrlBadgeProps) {
         return (
           <Tooltip key={page.url}>
             <TooltipTrigger asChild>
-              <a
-                href={page.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={page.url} target="_blank" rel="noopener noreferrer">
                 <Badge
                   variant="secondary"
                   className="gap-1.5 max-w-[300px] shrink-0 truncate"
                 >
                   <Globe className="h-3 w-3 shrink-0" />
-                  <span className="truncate">
-                    {page.title || hostname}
-                  </span>
+                  <span className="truncate">{page.title || hostname}</span>
                 </Badge>
               </a>
             </TooltipTrigger>

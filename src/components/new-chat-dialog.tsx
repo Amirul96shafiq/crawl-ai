@@ -32,6 +32,7 @@ interface CrawlResult {
   title: string;
   content: string;
   links: DiscoveredLink[];
+  featuredImageUrl?: string | null;
 }
 
 interface NewChatDialogProps {
@@ -53,7 +54,8 @@ export function NewChatDialog({
 }: NewChatDialogProps) {
   const router = useRouter();
   const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = controlledOpen !== undefined && controlledOnOpenChange !== undefined;
+  const isControlled =
+    controlledOpen !== undefined && controlledOnOpenChange !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled
     ? (v: boolean) => controlledOnOpenChange!(v)
@@ -151,6 +153,7 @@ export function NewChatDialog({
             url,
             title: crawlResult.title,
             content: crawlResult.content,
+            featuredImageUrl: crawlResult.featuredImageUrl ?? null,
           },
           subLinkUrls: Array.from(selectedLinks),
         }),
@@ -236,13 +239,23 @@ export function NewChatDialog({
                     if (!urlTouched) setUrlTouched(true);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !urlInvalid && !limitReached) handleCrawl();
+                    if (e.key === "Enter" && !urlInvalid && !limitReached)
+                      handleCrawl();
                   }}
                   disabled={crawling || limitReached}
                   aria-invalid={urlInvalid || undefined}
-                  className={urlInvalid ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50" : ""}
+                  className={
+                    urlInvalid
+                      ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/50"
+                      : ""
+                  }
                 />
-                <Button onClick={handleCrawl} disabled={crawling || !url.trim() || urlInvalid || limitReached}>
+                <Button
+                  onClick={handleCrawl}
+                  disabled={
+                    crawling || !url.trim() || urlInvalid || limitReached
+                  }
+                >
                   {crawling ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -313,8 +326,12 @@ export function NewChatDialog({
                       const filtered = crawlResult.links.filter(
                         (link) =>
                           !linkSearch.trim() ||
-                          link.text.toLowerCase().includes(linkSearch.toLowerCase()) ||
-                          link.url.toLowerCase().includes(linkSearch.toLowerCase())
+                          link.text
+                            .toLowerCase()
+                            .includes(linkSearch.toLowerCase()) ||
+                          link.url
+                            .toLowerCase()
+                            .includes(linkSearch.toLowerCase()),
                       );
                       return filtered.length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">
@@ -322,23 +339,23 @@ export function NewChatDialog({
                         </p>
                       ) : (
                         filtered.map((link) => (
-                      <label
-                        key={link.url}
-                        className="flex min-w-0 items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
-                      >
-                        <Checkbox
-                          checked={selectedLinks.has(link.url)}
-                          onCheckedChange={() => toggleLink(link.url)}
-                          className="mt-0.5"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm truncate">{link.text}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {link.url}
-                          </p>
-                        </div>
-                      </label>
-                    ))
+                          <label
+                            key={link.url}
+                            className="flex min-w-0 items-start gap-2 cursor-pointer hover:bg-accent rounded-md p-1.5 -mx-1.5"
+                          >
+                            <Checkbox
+                              checked={selectedLinks.has(link.url)}
+                              onCheckedChange={() => toggleLink(link.url)}
+                              className="mt-0.5"
+                            />
+                            <div className="min-w-0">
+                              <p className="text-sm truncate">{link.text}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {link.url}
+                              </p>
+                            </div>
+                          </label>
+                        ))
                       );
                     })()}
                   </div>
@@ -352,7 +369,13 @@ export function NewChatDialog({
             )}
 
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => { setStep("url"); setCrawlResult(null); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setStep("url");
+                  setCrawlResult(null);
+                }}
+              >
                 Back
               </Button>
               <Button onClick={handleCreate}>

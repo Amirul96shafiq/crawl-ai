@@ -36,11 +36,11 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AppearanceProvider>
-          <TooltipProvider>
-            <DialogOverlayTracker />
-            <AppShell>{children}</AppShell>
-            <Toaster />
-          </TooltipProvider>
+            <TooltipProvider>
+              <DialogOverlayTracker />
+              <AppShell>{children}</AppShell>
+              <Toaster />
+            </TooltipProvider>
           </AppearanceProvider>
         </ThemeProvider>
       </body>

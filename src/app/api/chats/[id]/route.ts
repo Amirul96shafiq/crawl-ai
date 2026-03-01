@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
-import {
-  MAX_PINNED_CHATS_GUEST,
-  MAX_PINNED_CHATS_USER,
-} from "@/lib/constants";
+import { MAX_PINNED_CHATS_GUEST, MAX_PINNED_CHATS_USER } from "@/lib/constants";
 
 const getWhere = (id: string, caller: { type: string; id: string }) =>
   caller.type === "user"
@@ -52,10 +49,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        { error: "Invalid JSON" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
     const { title, pinned, archived } = body;
@@ -65,10 +59,7 @@ export async function PATCH(
       const chat = await prisma.chat.findFirst({ where });
 
       if (!chat) {
-        return NextResponse.json(
-          { error: "Chat not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "Chat not found" }, { status: 404 });
       }
 
       await prisma.chat.update({
@@ -86,10 +77,7 @@ export async function PATCH(
       const chat = await prisma.chat.findFirst({ where });
 
       if (!chat) {
-        return NextResponse.json(
-          { error: "Chat not found" },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: "Chat not found" }, { status: 404 });
       }
 
       const pinnedCount = await prisma.chat.count({
@@ -103,9 +91,7 @@ export async function PATCH(
       });
 
       const maxPinned =
-        caller.type === "user"
-          ? MAX_PINNED_CHATS_USER
-          : MAX_PINNED_CHATS_GUEST;
+        caller.type === "user" ? MAX_PINNED_CHATS_USER : MAX_PINNED_CHATS_GUEST;
 
       if (pinned) {
         if (chat.pinnedAt) {
@@ -135,28 +121,25 @@ export async function PATCH(
       return NextResponse.json({ updated: true });
     }
 
-  if (typeof title !== "string") {
-    return NextResponse.json(
-      { error: "title must be a string" },
-      { status: 400 },
-    );
-  }
+    if (typeof title !== "string") {
+      return NextResponse.json(
+        { error: "title must be a string" },
+        { status: 400 },
+      );
+    }
 
-  const where = getWhere(id, caller);
-  const chat = await prisma.chat.findFirst({ where });
+    const where = getWhere(id, caller);
+    const chat = await prisma.chat.findFirst({ where });
 
-  if (!chat) {
-    return NextResponse.json(
-      { error: "Chat not found" },
-      { status: 404 },
-    );
-  }
+    if (!chat) {
+      return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    }
 
-  await prisma.chat.update({
-    where: { id },
-    data: { title: title.trim() || null },
-  });
-  return NextResponse.json({ updated: true });
+    await prisma.chat.update({
+      where: { id },
+      data: { title: title.trim() || null },
+    });
+    return NextResponse.json({ updated: true });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Internal server error";
@@ -175,10 +158,7 @@ export async function DELETE(
   const chat = await prisma.chat.findFirst({ where });
 
   if (!chat) {
-    return NextResponse.json(
-      { error: "Chat not found" },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
   }
 
   await prisma.chat.delete({ where: { id } });

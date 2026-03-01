@@ -19,8 +19,8 @@ export default function HomePage() {
           </h1>
           <p className="text-muted-foreground">
             Enter any webpage URL and ask AI questions about its content.
-            We&apos;ll crawl the page, extract the information, and let you
-            chat about it.
+            We&apos;ll crawl the page, extract the information, and let you chat
+            about it.
           </p>
         </div>
         <NewChatDialog

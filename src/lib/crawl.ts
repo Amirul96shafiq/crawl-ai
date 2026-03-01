@@ -6,6 +6,7 @@ export interface CrawlResult {
   title: string;
   content: string;
   links: { url: string; text: string }[];
+  featuredImageUrl?: string | null;
 }
 
 export async function crawlUrl(url: string): Promise<CrawlResult> {
@@ -37,11 +38,13 @@ export async function crawlUrl(url: string): Promise<CrawlResult> {
 
     const baseUrl = new URL(url);
     const links = extractLinks(dom, baseUrl);
+    const featuredImageUrl = extractFeaturedImage(dom, baseUrl);
 
     return {
       title: article.title || "",
       content: article.textContent.trim(),
       links,
+      featuredImageUrl,
     };
   } finally {
     clearTimeout(timeout);
@@ -57,8 +60,18 @@ function extractLinks(
   const anchors = dom.window.document.querySelectorAll("a[href]");
 
   const mediaExtensions = new Set([
-    ".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp",
-    ".mp4", ".mp3", ".pdf", ".zip", ".tar", ".gz",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".svg",
+    ".webp",
+    ".mp4",
+    ".mp3",
+    ".pdf",
+    ".zip",
+    ".tar",
+    ".gz",
   ]);
 
   for (const anchor of anchors) {
@@ -71,7 +84,9 @@ function extractLinks(
       if (resolved.hostname !== baseUrl.hostname) continue;
       if (resolved.pathname === baseUrl.pathname) continue;
 
-      const ext = resolved.pathname.slice(resolved.pathname.lastIndexOf(".")).toLowerCase();
+      const ext = resolved.pathname
+        .slice(resolved.pathname.lastIndexOf("."))
+        .toLowerCase();
       if (mediaExtensions.has(ext)) continue;
 
       resolved.hash = "";
@@ -87,4 +102,29 @@ function extractLinks(
   }
 
   return results;
+}
+
+function extractFeaturedImage(dom: JSDOM, baseUrl: URL): string | null {
+  const doc = dom.window.document;
+  const selectors = [
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"]',
+    'meta[property="article:image"]',
+  ];
+
+  for (const selector of selectors) {
+    const el = doc.querySelector(selector);
+    const href = el?.getAttribute("content")?.trim();
+    if (!href) continue;
+
+    try {
+      const resolved = new URL(href, baseUrl.origin);
+      if (!["http:", "https:"].includes(resolved.protocol)) continue;
+      return resolved.href;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }

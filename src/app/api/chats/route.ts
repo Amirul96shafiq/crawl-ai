@@ -12,16 +12,18 @@ export async function GET(request: Request) {
     const caller = await getCallerIdentity();
 
     const where =
-      caller.type === "user"
-        ? { userId: caller.id }
-        : { guestId: caller.id };
+      caller.type === "user" ? { userId: caller.id } : { guestId: caller.id };
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(
-      parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT,
+      parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) ||
+        DEFAULT_LIMIT,
       MAX_LIMIT,
     );
-    const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10) || 0, 0);
+    const skip = Math.max(
+      parseInt(searchParams.get("skip") || "0", 10) || 0,
+      0,
+    );
     const archived = searchParams.get("archived") === "true";
 
     if (archived && caller.type === "guest") {
@@ -37,19 +39,29 @@ export async function GET(request: Request) {
       all = await prisma.chat.findMany({
         where: baseWhere,
         orderBy: { archivedAt: "desc" },
-        include: { pages: { select: { url: true, title: true } } },
+        include: {
+          pages: { select: { url: true, title: true, featuredImageUrl: true } },
+        },
       });
     } else {
       const [pinned, unpinned] = await Promise.all([
         prisma.chat.findMany({
           where: { ...baseWhere, pinnedAt: { not: null } },
           orderBy: { pinnedAt: "asc" },
-          include: { pages: { select: { url: true, title: true } } },
+          include: {
+            pages: {
+              select: { url: true, title: true, featuredImageUrl: true },
+            },
+          },
         }),
         prisma.chat.findMany({
           where: { ...baseWhere, pinnedAt: null },
           orderBy: { createdAt: "desc" },
-          include: { pages: { select: { url: true, title: true } } },
+          include: {
+            pages: {
+              select: { url: true, title: true, featuredImageUrl: true },
+            },
+          },
         }),
       ]);
       all = [...pinned, ...unpinned];
@@ -68,10 +80,7 @@ export async function GET(request: Request) {
     const message =
       err instanceof Error ? err.message : "Internal server error";
     console.error("[GET /api/chats]", err);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -108,9 +117,7 @@ export async function POST(request: Request) {
   );
 
   const ownerData =
-    caller.type === "user"
-      ? { userId: caller.id }
-      : { guestId: caller.id };
+    caller.type === "user" ? { userId: caller.id } : { guestId: caller.id };
 
   const chat = await prisma.chat.create({
     data: {
@@ -122,29 +129,33 @@ export async function POST(request: Request) {
             url: primaryPage.url,
             title: primaryPage.title || null,
             content: primaryPage.content,
+            featuredImageUrl: primaryPage.featuredImageUrl ?? null,
           },
-          ...subPages
+          ...(subPages
             .map((result, i) => {
               if (result.status === "fulfilled") {
                 return {
                   url: urlsToFetch[i],
                   title: result.value.title || null,
                   content: result.value.content,
+                  featuredImageUrl: result.value.featuredImageUrl ?? null,
                 };
               }
               return null;
             })
-            .filter(Boolean) as { url: string; title: string | null; content: string }[],
+            .filter(Boolean) as {
+            url: string;
+            title: string | null;
+            content: string;
+            featuredImageUrl: string | null;
+          }[]),
         ],
       },
     },
     include: {
-      pages: { select: { url: true, title: true } },
+      pages: { select: { url: true, title: true, featuredImageUrl: true } },
     },
   });
 
-  return NextResponse.json(
-    { id: chat.id, pages: chat.pages },
-    { status: 201 },
-  );
+  return NextResponse.json({ id: chat.id, pages: chat.pages }, { status: 201 });
 }

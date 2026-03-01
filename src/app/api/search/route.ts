@@ -9,11 +9,17 @@ function extractSnippet(text: string, query: string): string {
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase().trim();
   const idx = lowerText.indexOf(lowerQuery);
-  if (idx < 0) return text.slice(0, SNIPPET_LENGTH) + (text.length > SNIPPET_LENGTH ? "…" : "");
+  if (idx < 0)
+    return (
+      text.slice(0, SNIPPET_LENGTH) + (text.length > SNIPPET_LENGTH ? "…" : "")
+    );
   const half = Math.floor(SNIPPET_LENGTH / 2);
   const start = Math.max(0, idx - half);
   const end = Math.min(text.length, idx + lowerQuery.length + half);
-  const snippet = (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
+  const snippet =
+    (start > 0 ? "…" : "") +
+    text.slice(start, end) +
+    (end < text.length ? "…" : "");
   return snippet;
 }
 
@@ -48,14 +54,9 @@ export async function GET(request: Request) {
     }
 
     const ownership =
-      caller.type === "user"
-        ? { userId: caller.id }
-        : { guestId: caller.id };
+      caller.type === "user" ? { userId: caller.id } : { guestId: caller.id };
 
-    const scopeFilter =
-      scope === "current"
-        ? { id: chatId }
-        : {};
+    const scopeFilter = scope === "current" ? { id: chatId } : {};
 
     const baseWhere = { ...ownership, ...scopeFilter };
 
@@ -111,17 +112,28 @@ export async function GET(request: Request) {
     const results = chats
       .filter((chat) => {
         if (chat.title?.toLowerCase().includes(lowerQ)) return true;
-        if (chat.messages.some((m) => m.content.toLowerCase().includes(lowerQ))) return true;
-        if (chat.pages.some((p) => p.content.toLowerCase().includes(lowerQ))) return true;
-        if (chat.pages.some((p) => p.url.toLowerCase().includes(lowerQ))) return true;
-        if (chat.pages.some((p) => p.title?.toLowerCase().includes(lowerQ))) return true;
+        if (chat.messages.some((m) => m.content.toLowerCase().includes(lowerQ)))
+          return true;
+        if (chat.pages.some((p) => p.content.toLowerCase().includes(lowerQ)))
+          return true;
+        if (chat.pages.some((p) => p.url.toLowerCase().includes(lowerQ)))
+          return true;
+        if (chat.pages.some((p) => p.title?.toLowerCase().includes(lowerQ)))
+          return true;
         return false;
       })
       .map((chat) => {
-        const matches: { type: "title" | "message" | "page" | "url"; snippet: string; messageId?: string }[] = [];
+        const matches: {
+          type: "title" | "message" | "page" | "url";
+          snippet: string;
+          messageId?: string;
+        }[] = [];
 
         if (chat.title?.toLowerCase().includes(lowerQ)) {
-          matches.push({ type: "title", snippet: extractSnippet(chat.title, q) });
+          matches.push({
+            type: "title",
+            snippet: extractSnippet(chat.title, q),
+          });
         }
 
         for (const msg of chat.messages) {
@@ -168,9 +180,6 @@ export async function GET(request: Request) {
     const message =
       err instanceof Error ? err.message : "Internal server error";
     console.error("[GET /api/search]", err);
-    return NextResponse.json(
-      { error: message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

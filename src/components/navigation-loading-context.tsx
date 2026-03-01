@@ -45,9 +45,7 @@ export function NavigationLoadingProvider({
   }, [pathname, prevPathname]);
 
   return (
-    <NavigationLoadingContext.Provider
-      value={{ isNavigating, navigateToChat }}
-    >
+    <NavigationLoadingContext.Provider value={{ isNavigating, navigateToChat }}>
       {children}
     </NavigationLoadingContext.Provider>
   );

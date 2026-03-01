@@ -5,7 +5,10 @@ import { ChatSidebar } from "@/components/chat-sidebar";
 import { ChatLoadingSkeleton } from "@/components/chat-loading-skeleton";
 import { TopRightActions } from "@/components/top-right-actions";
 import { GuestLimitProvider } from "@/components/guest-limit-context";
-import { NavigationLoadingProvider, useNavigationLoading } from "@/components/navigation-loading-context";
+import {
+  NavigationLoadingProvider,
+  useNavigationLoading,
+} from "@/components/navigation-loading-context";
 
 function MainContent({ children }: { children: React.ReactNode }) {
   const nav = useNavigationLoading();

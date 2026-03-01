@@ -21,17 +21,13 @@ export async function POST(request: Request) {
   const file = formData.get("avatar") as File | null;
 
   if (!file || file.size === 0) {
-    return NextResponse.json(
-      { error: "No file provided" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
 
   if (!ACCEPTED_TYPES.includes(file.type)) {
     return NextResponse.json(
       {
-        error:
-          "Invalid format. Accepted: JPEG, JPG, PNG, WebP",
+        error: "Invalid format. Accepted: JPEG, JPG, PNG, WebP",
       },
       { status: 400 },
     );

@@ -41,9 +41,13 @@ function MatchIcon({ type }: { type: SearchMatch["type"] }) {
     case "title":
       return <Type className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
     case "message":
-      return <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
+      return (
+        <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      );
     case "page":
-      return <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
+      return (
+        <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      );
     case "url":
       return <Link2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />;
   }
@@ -62,11 +66,7 @@ function MatchTypeLabel({ type }: { type: SearchMatch["type"] }) {
   }
 }
 
-export function SearchDialog({
-  open,
-  onOpenChange,
-  user,
-}: SearchDialogProps) {
+export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
   const router = useRouter();
   const pathname = usePathname();
   const currentChatId = pathname.startsWith("/chat/")
@@ -131,11 +131,14 @@ export function SearchDialog({
     if (archived) {
       router.push(`/archive?highlight=${chatId}`);
     } else {
-      router.push(`/chat/${chatId}${messageId ? `?highlight=${messageId}` : ""}`);
+      router.push(
+        `/chat/${chatId}${messageId ? `?highlight=${messageId}` : ""}`,
+      );
     }
   }
 
-  const canSearch = scope === "all" || (scope === "current" && canSearchCurrent);
+  const canSearch =
+    scope === "all" || (scope === "current" && canSearchCurrent);
   const showIncludeArchived = isLoggedIn && scope === "all";
 
   return (
@@ -220,17 +223,16 @@ export function SearchDialog({
               {canSearch && query.trim().length >= 2 && loading && (
                 <div className="flex items-center justify-center gap-2 py-8">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Searching…</span>
+                  <span className="text-sm text-muted-foreground">
+                    Searching…
+                  </span>
                 </div>
               )}
-              {canSearch &&
-                !loading &&
-                searched &&
-                results.length === 0 && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">
-                    No matches found.
-                  </p>
-                )}
+              {canSearch && !loading && searched && results.length === 0 && (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No matches found.
+                </p>
+              )}
               {canSearch &&
                 !loading &&
                 results.length > 0 &&

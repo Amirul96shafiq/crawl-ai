@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
@@ -17,15 +17,21 @@ interface ChatMessagesProps {
   messages: DisplayMessage[];
   isLoading: boolean;
   highlightMessageId?: string;
+  featuredImageUrl?: string | null;
+  primaryPageUrl?: string;
 }
 
 export function ChatMessages({
   messages,
   isLoading,
   highlightMessageId,
+  featuredImageUrl,
+  primaryPageUrl,
 }: ChatMessagesProps) {
   const scrollRef = useScrollToBottom<HTMLDivElement>(messages);
   const { compact, chatFontSize, chatLineSpacing } = useAppearance();
+  const [imageError, setImageError] = useState(false);
+  const showFeaturedImage = featuredImageUrl && !imageError;
 
   const fontSizeClass =
     chatFontSize === "small"
@@ -50,13 +56,55 @@ export function ChatMessages({
     }
   }, [highlightMessageId, messages]);
 
+  const featuredImageBlock = showFeaturedImage && (
+    <div className="mx-auto max-w-3xl w-full mb-4">
+      {primaryPageUrl ? (
+        <a
+          href={primaryPageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl overflow-hidden border bg-muted"
+        >
+          <img
+            src={featuredImageUrl}
+            alt=""
+            className="w-full max-h-48 object-cover"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setImageError(true)}
+          />
+        </a>
+      ) : (
+        <div className="rounded-xl overflow-hidden border bg-muted">
+          <img
+            src={featuredImageUrl}
+            alt=""
+            className="w-full max-h-48 object-cover"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={() => setImageError(true)}
+          />
+        </div>
+      )}
+    </div>
+  );
+
   if (!messages.length) {
     return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <div className="text-center space-y-2">
-          <Bot className="h-12 w-12 mx-auto opacity-50" />
-          <p className="text-lg font-medium">Ask anything about the crawled page(s)</p>
-          <p className="text-sm">Your questions will be answered based on the page content</p>
+      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground overflow-y-auto">
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+          {featuredImageBlock}
+          <div className="text-center space-y-2">
+            <Bot className="h-12 w-12 mx-auto opacity-50" />
+            <p className="text-lg font-medium">
+              Ask anything about the crawled page(s)
+            </p>
+            <p className="text-sm">
+              Your questions will be answered based on the page content
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -73,11 +121,9 @@ export function ChatMessages({
       )}
     >
       <div
-        className={cn(
-          "mx-auto max-w-3xl",
-          compact ? "space-y-2" : "space-y-6",
-        )}
+        className={cn("mx-auto max-w-3xl", compact ? "space-y-2" : "space-y-6")}
       >
+        {featuredImageBlock}
         {messages.map((message) => (
           <div
             key={message.id}

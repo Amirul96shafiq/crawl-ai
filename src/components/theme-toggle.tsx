@@ -55,7 +55,9 @@ export function ThemeToggle() {
           className={buttonClass}
           onClick={() => {
             setTheme(nextTheme);
-            toast.success(`Theme set to ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
+            toast.success(
+              `Theme set to ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`,
+            );
           }}
           aria-label={`Switch to ${nextTheme} theme`}
         >

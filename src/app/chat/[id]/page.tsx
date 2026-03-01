@@ -14,7 +14,9 @@ interface ChatPageProps {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: ChatPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ChatPageProps): Promise<Metadata> {
   const { id } = await params;
   const session = await auth();
   const cookieStore = await cookies();
@@ -62,7 +64,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const chat = await prisma.chat.findFirst({
     where: { id, ...ownerWhere },
     include: {
-      pages: { select: { url: true, title: true } },
+      pages: { select: { url: true, title: true, featuredImageUrl: true } },
       messages: { orderBy: { createdAt: "asc" } },
     },
   });

@@ -45,12 +45,13 @@ model Chat {
 }
 
 model ChatPage {
-  id      String @id @default(cuid())
-  chatId  String
-  chat    Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  url     String
-  title   String?
-  content String
+  id                String  @id @default(cuid())
+  chatId            String
+  chat              Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  url               String
+  title             String?
+  content           String
+  featuredImageUrl  String?
 
   @@index([chatId])
 }

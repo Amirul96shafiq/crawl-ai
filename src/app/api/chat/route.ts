@@ -25,9 +25,7 @@ export async function POST(request: Request) {
   const caller = await getCallerIdentity();
 
   const ownerWhere =
-    caller.type === "user"
-      ? { userId: caller.id }
-      : { guestId: caller.id };
+    caller.type === "user" ? { userId: caller.id } : { guestId: caller.id };
 
   const chat = await prisma.chat.findFirst({
     where: { id: chatId, ...ownerWhere },
@@ -43,7 +41,11 @@ export async function POST(request: Request) {
       ? USER_MESSAGES_PER_CHAT_LIMIT
       : GUEST_MESSAGES_PER_CHAT_LIMIT;
 
-  const messageCountWhere: { chatId: string; role: string; createdAt?: { gte: Date } } = {
+  const messageCountWhere: {
+    chatId: string;
+    role: string;
+    createdAt?: { gte: Date };
+  } = {
     chatId,
     role: "user",
   };
@@ -74,9 +76,7 @@ export async function POST(request: Request) {
     .map((p) => `--- Page: ${p.url} ---\n${p.content}`)
     .join("\n\n");
 
-  const mainUrl = chat.pages[0]
-    ? new URL(chat.pages[0].url).origin + "/"
-    : "";
+  const mainUrl = chat.pages[0] ? new URL(chat.pages[0].url).origin + "/" : "";
 
   const fallbackRule = mainUrl
     ? `- If the answer is not in the content, say so clearly and suggest the user visit the crawled page URL(s) for more details, or the main site (${mainUrl}) for broader information. Use markdown links when suggesting URLs.`
@@ -98,9 +98,9 @@ ${pageContext}`;
 
   const isFirstExchange = chat.messages.length === 0;
 
-  const lastUserMsg = [...messages].reverse().find(
-    (m: { role: string }) => m.role === "user",
-  );
+  const lastUserMsg = [...messages]
+    .reverse()
+    .find((m: { role: string }) => m.role === "user");
   const lastUserContent = extractTextFromMessage(lastUserMsg);
 
   await prisma.message.create({
@@ -109,7 +109,8 @@ ${pageContext}`;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey || !apiKey.startsWith("sk-") || apiKey.length < 20) {
-    const errorText = "OpenAI API key is not configured. Please add a valid OPENAI_API_KEY to your environment variables.";
+    const errorText =
+      "OpenAI API key is not configured. Please add a valid OPENAI_API_KEY to your environment variables.";
     await prisma.message.create({
       data: { chatId, role: "assistant", content: errorText },
     });
@@ -152,7 +153,8 @@ ${pageContext}`;
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Chat API error:", error);
-    const errorText = "Something went wrong while generating a response. Please try again later.";
+    const errorText =
+      "Something went wrong while generating a response. Please try again later.";
     await prisma.message.create({
       data: { chatId, role: "assistant", content: errorText },
     });
@@ -169,7 +171,9 @@ ${pageContext}`;
   }
 }
 
-function extractTextFromMessage(msg: Record<string, unknown> | undefined): string {
+function extractTextFromMessage(
+  msg: Record<string, unknown> | undefined,
+): string {
   if (!msg) return "";
   if (typeof msg.content === "string") return msg.content;
   if (Array.isArray(msg.parts)) {
