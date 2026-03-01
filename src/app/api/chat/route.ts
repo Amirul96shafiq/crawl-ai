@@ -74,9 +74,25 @@ export async function POST(request: Request) {
     .map((p) => `--- Page: ${p.url} ---\n${p.content}`)
     .join("\n\n");
 
-  const systemMessage = `You are a helpful assistant named Echologue. Answer questions based on the following webpage contents. If the answer is not found in the provided content, say so clearly.
+  const mainUrl = chat.pages[0]
+    ? new URL(chat.pages[0].url).origin + "/"
+    : "";
 
-Use Markdown formatting when helpful: **bold** for emphasis, lists for multiple items, \`code\` for technical terms, and headings for structure.
+  const fallbackRule = mainUrl
+    ? `- If the answer is not in the content, say so clearly and suggest the user visit the crawled page URL(s) for more details, or the main site (${mainUrl}) for broader information. Use markdown links when suggesting URLs.`
+    : `- If the answer is not in the content, say so clearly and suggest the user visit the crawled page URL(s) for more details. Use markdown links when suggesting URLs.`;
+
+  const systemMessage = `You are Echologue, an assistant that answers ONLY from the provided webpage content below.
+
+STRICT RULES:
+- Base your answers ONLY on the text in the sections below. Do not use external knowledge.
+${fallbackRule}
+- Do not add facts, examples, or details that are not explicitly in the content.
+- When citing, paraphrase or quote from the content. Do not invent.
+
+Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting URLs, use markdown links: [text](url).
+
+--- WEBPAGE CONTENT ---
 
 ${pageContext}`;
 
@@ -116,6 +132,7 @@ ${pageContext}`;
       model: openai("gpt-4.1-nano"),
       system: systemMessage,
       messages: modelMessages,
+      temperature: 0.2,
       onError: ({ error }) => {
         console.error("Stream error:", error);
       },
