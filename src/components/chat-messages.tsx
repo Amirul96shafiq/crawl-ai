@@ -4,14 +4,17 @@ import { useEffect, useState } from "react";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
-import { Bot, Calendar, Clock, MoreHorizontal } from "lucide-react";
+import { Bot, Calendar, Clock, Copy, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface DisplayMessage {
   id: string;
@@ -258,8 +261,22 @@ export function ChatMessages({
                   <DropdownMenuContent
                     align={message.role === "user" ? "end" : "start"}
                     side="top"
-                    className="min-w-48"
+                    className="min-w-36"
                   >
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(message.content);
+                          toast.success("Copied to clipboard");
+                        } catch {
+                          toast.error("Failed to copy");
+                        }
+                      }}
+                    >
+                      <Copy className="size-3.5 shrink-0" />
+                      Copy
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <div className="px-2 py-2 text-xs space-y-1.5">
                       {message.createdAt ? (
                         <>
