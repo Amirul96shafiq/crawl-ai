@@ -51,8 +51,60 @@ export function TopRightActions({
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [rightOffset, setRightOffset] = useState(0);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    let observer: ResizeObserver | null = null;
+    let scrollElement: HTMLElement | null = null;
+
+    const checkScrollbar = () => {
+      const currentScrollElement = document.querySelector(
+        "main .overflow-y-auto",
+      ) as HTMLElement | null;
+
+      if (currentScrollElement !== scrollElement) {
+        if (scrollElement && observer) observer.unobserve(scrollElement);
+        scrollElement = currentScrollElement;
+        if (scrollElement && observer) observer.observe(scrollElement);
+      }
+
+      let offset = 0;
+      if (scrollElement) {
+        const hasScrollbar =
+          scrollElement.scrollHeight > scrollElement.clientHeight;
+        const scrollbarWidth =
+          scrollElement.offsetWidth - scrollElement.clientWidth;
+        if (hasScrollbar && scrollbarWidth > 0) {
+          offset = scrollbarWidth;
+        }
+      } else {
+        const hasScrollbar =
+          window.innerWidth > document.documentElement.clientWidth;
+        if (hasScrollbar) {
+          offset = window.innerWidth - document.documentElement.clientWidth;
+        }
+      }
+      setRightOffset(offset);
+    };
+
+    observer = new ResizeObserver(checkScrollbar);
+    observer.observe(document.body);
+    observer.observe(document.documentElement);
+
+    const mutationObserver = new MutationObserver(checkScrollbar);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    checkScrollbar();
+    window.addEventListener("resize", checkScrollbar);
+
+    return () => {
+      window.removeEventListener("resize", checkScrollbar);
+      observer?.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
 
   const current = (theme ?? "system") as Theme;
   const nextIndex = (themes.indexOf(current) + 1) % themes.length;
@@ -76,7 +128,10 @@ export function TopRightActions({
   useHotkeys("alt+b", onSidebarCollapseToggle, { enableOnFormTags: [] });
 
   return (
-    <div className="fixed top-3 right-0 z-40 flex flex-col rounded-l-md border border-r-0 border-border/50 bg-card">
+    <div
+      className="fixed top-3 right-0 z-40 flex flex-col rounded-l-md border border-r-0 border-border/50 bg-card transition-[right] duration-200"
+      style={{ right: `${rightOffset}px` }}
+    >
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
