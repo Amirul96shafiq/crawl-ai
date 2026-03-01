@@ -7,6 +7,7 @@ import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
 import { useAppearance } from "@/components/appearance-provider";
+import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -166,36 +167,46 @@ export function ChatView({
     sendMessage({ text });
   }
 
+  const scrollRef = useScrollToBottom<HTMLDivElement>(displayMessages);
+
   return (
-    <div className="flex flex-col h-full">
+    <div
+      ref={scrollRef}
+      className="h-full min-h-0 overflow-y-auto"
+    >
       <div
         className={cn(
-          "px-4 pt-6 pb-3",
+          "sticky top-0 z-10 shrink-0 bg-background px-4 pt-6 pb-3",
           compact && "py-2 px-2",
         )}
       >
         <UrlBadge pages={pages} />
       </div>
-      <ChatMessages
-        messages={displayMessages}
-        isLoading={isLoading}
-        highlightMessageId={highlightMessageId}
-        featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
-        primaryPageUrl={pages[0]?.url}
-        pages={pages}
-        onSuggestionClick={handleSuggestionClick}
-      />
-      <ChatInput
-        ref={inputRef}
-        input={input}
-        onChange={setInput}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        disabled={!canSendMessage}
-        remainingQuestions={remainingQuestions}
-        questionLimit={userMessageLimit}
-        resetsDaily={resetsDaily}
-      />
+      <div className="min-h-[calc(100%-10rem)] pb-28">
+        <ChatMessages
+          scrollRef={scrollRef}
+          messages={displayMessages}
+          isLoading={isLoading}
+          highlightMessageId={highlightMessageId}
+          featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
+          primaryPageUrl={pages[0]?.url}
+          pages={pages}
+          onSuggestionClick={handleSuggestionClick}
+        />
+      </div>
+      <div className="sticky bottom-0 z-10 shrink-0 bg-background">
+        <ChatInput
+          ref={inputRef}
+          input={input}
+          onChange={setInput}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          disabled={!canSendMessage}
+          remainingQuestions={remainingQuestions}
+          questionLimit={userMessageLimit}
+          resetsDaily={resetsDaily}
+        />
+      </div>
     </div>
   );
 }

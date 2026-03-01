@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
+import { useEffect, useState, type RefObject } from "react";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
 import { Bot, Calendar, Clock, Copy, MoreHorizontal } from "lucide-react";
@@ -34,6 +33,7 @@ const SUGGESTED_QUESTIONS = [
 ] as const;
 
 interface ChatMessagesProps {
+  scrollRef: RefObject<HTMLDivElement | null>;
   messages: DisplayMessage[];
   isLoading: boolean;
   highlightMessageId?: string;
@@ -44,6 +44,7 @@ interface ChatMessagesProps {
 }
 
 export function ChatMessages({
+  scrollRef,
   messages,
   isLoading,
   highlightMessageId,
@@ -52,7 +53,6 @@ export function ChatMessages({
   pages,
   onSuggestionClick,
 }: ChatMessagesProps) {
-  const scrollRef = useScrollToBottom<HTMLDivElement>(messages);
   const { compact, chatFontSize, chatLineSpacing } = useAppearance();
   const [imageError, setImageError] = useState(false);
   const showFeaturedImage = featuredImageUrl && !imageError;
@@ -134,7 +134,7 @@ export function ChatMessages({
     }
 
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground overflow-y-auto">
+      <div className="min-h-[calc(100vh-14rem)] flex flex-col items-center justify-center text-muted-foreground">
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
           {featuredImageBlock}
           <div className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
@@ -174,9 +174,7 @@ export function ChatMessages({
 
   return (
     <div
-      ref={scrollRef}
       className={cn(
-        "flex-1 overflow-y-auto",
         compact ? "p-2 pt-4" : "p-4 pt-6",
       )}
     >
