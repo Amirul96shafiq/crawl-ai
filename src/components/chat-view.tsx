@@ -165,6 +165,9 @@ export function ChatView({
       setRemainingFromSession((r) => Math.max(0, r - 1));
     }
     sendMessage({ text });
+    window.dispatchEvent(
+      new CustomEvent("echologue:chat-message-sent", { detail: { chatId } }),
+    );
   }
 
   const scrollRef = useScrollToBottom<HTMLDivElement>(displayMessages);

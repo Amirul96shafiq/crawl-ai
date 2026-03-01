@@ -146,7 +146,7 @@ function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
   }
   for (const chat of pinnedById.values()) orderedPinned.push(chat);
   const remainingUnpinned = [...unpinnedById.values()];
-  return [...orderedPinned, ...remainingUnpinned, ...orderedUnpinned];
+  return [...orderedPinned, ...orderedUnpinned, ...remainingUnpinned];
 }
 
 function SortableChatItem({
@@ -801,6 +801,49 @@ export function ChatSidebar({
     window.addEventListener("chat-restored", handler);
     return () => window.removeEventListener("chat-restored", handler);
   }, [fetchChats]);
+
+  const identityKeyRef = useRef(identityKey);
+  const chatsRef = useRef(chats);
+  identityKeyRef.current = identityKey;
+  chatsRef.current = chats;
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { chatId } = (e as CustomEvent<{ chatId: string }>).detail ?? {};
+      const key = identityKeyRef.current;
+      const chatList = chatsRef.current;
+      if (!chatId || !key) return;
+      const pinnedIds = new Set(
+        chatList.filter((c) => c.pinnedAt).map((c) => c.id),
+      );
+      if (pinnedIds.has(chatId)) return;
+      const orderedIds = getStoredOrder(key);
+      const without = orderedIds.filter((id) => id !== chatId);
+      let insertIndex = without.length;
+      for (let i = 0; i < without.length; i++) {
+        if (!pinnedIds.has(without[i])) {
+          insertIndex = i;
+          break;
+        }
+      }
+      const newOrderedIds = [
+        ...without.slice(0, insertIndex),
+        chatId,
+        ...without.slice(insertIndex),
+      ];
+      saveOrder(key, newOrderedIds);
+      setChats((prev) => applyOrder(prev, newOrderedIds));
+    };
+    window.addEventListener(
+      "echologue:chat-message-sent",
+      handler as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        "echologue:chat-message-sent",
+        handler as EventListener,
+      );
+  }, []);
 
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
