@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AppearanceProvider } from "@/components/appearance-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/app-shell";
+import { DialogOverlayTracker } from "@/components/dialog-overlay-tracker";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -36,6 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AppearanceProvider>
           <TooltipProvider>
+            <DialogOverlayTracker />
             <AppShell>{children}</AppShell>
             <Toaster />
           </TooltipProvider>

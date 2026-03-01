@@ -142,8 +142,15 @@
   z-index: -1;
 }
 
-.echo-btn[aria-expanded="true"]::before {
+/* Pause echo animation when any dialog or sheet is open (class set by DialogOverlayTracker) */
+html.dialog-open .echo-btn::before {
   animation-play-state: paused;
+}
+
+/* Keep animation running for buttons inside dialog/sheet content */
+[data-slot="dialog-content"] .echo-btn::before,
+[data-slot="sheet-content"] .echo-btn::before {
+  animation-play-state: running !important;
 }
 
 @layer base {
