@@ -72,12 +72,34 @@ export function ChatMessages({
 
   useEffect(() => {
     if (!highlightMessageId || !scrollRef.current) return;
-    const el = scrollRef.current.querySelector(
-      `[data-message-id="${highlightMessageId}"]`,
-    );
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    function scrollToMessage() {
+      const container = scrollRef.current;
+      if (!container) return;
+      const el = container.querySelector<HTMLElement>(
+        `[data-message-id="${highlightMessageId}"]`,
+      );
+      if (!el) return;
+
+      const elRect = el.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const stickyTopOffset = 5 * 16;
+      const scrollTop =
+        container.scrollTop +
+        (elRect.top - containerRect.top) -
+        stickyTopOffset;
+
+      container.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
     }
+
+    const t1 = requestAnimationFrame(() => scrollToMessage());
+    const t2 = setTimeout(scrollToMessage, 100);
+    const t3 = setTimeout(scrollToMessage, 400);
+    return () => {
+      cancelAnimationFrame(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [highlightMessageId, messages]);
 
   const featuredImageBlock = showFeaturedImage && (
