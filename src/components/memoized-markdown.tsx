@@ -22,7 +22,7 @@ const MarkdownBlock = memo(
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
-          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+          p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
           strong: ({ children }) => (
             <strong className="font-semibold">{children}</strong>
           ),
