@@ -77,20 +77,40 @@ export async function POST(request: Request) {
     .join("\n\n");
 
   const mainUrl = chat.pages[0] ? new URL(chat.pages[0].url).origin + "/" : "";
+  const pageUrls = chat.pages.map((p) => p.url);
 
-  const fallbackRule = mainUrl
-    ? `- If the answer is not in the content, say so clearly and suggest the user visit the crawled page URL(s) for more details, or the main site (${mainUrl}) for broader information. Use markdown links when suggesting URLs.`
-    : `- If the answer is not in the content, say so clearly and suggest the user visit the crawled page URL(s) for more details. Use markdown links when suggesting URLs.`;
+  const urlFallbackParts: string[] = [];
+  if (pageUrls.length > 0) {
+    urlFallbackParts.push(
+      ...pageUrls.map((u) => `- Crawled page: ${u}`),
+    );
+  }
+  if (mainUrl) {
+    urlFallbackParts.push(`- Main site: ${mainUrl}`);
+  }
+  const exampleParts: string[] = [];
+  if (pageUrls[0]) exampleParts.push(`[this page](${pageUrls[0]})`);
+  if (mainUrl) exampleParts.push(`[the main site](${mainUrl})`);
+  const urlFallbackSection =
+    urlFallbackParts.length > 0
+      ? `
+WHEN ANSWER NOT FOUND: You MUST include these exact URLs as clickable markdown links in your response. Do not say "visit the main site" or "the relevant section" without including the actual links:
+${urlFallbackParts.join("\n")}
+
+Example: "For more details, visit ${exampleParts.join(" or ")}."
+`
+      : "";
 
   const systemMessage = `You are Echologue, an assistant that answers ONLY from the provided webpage content below.
 
 STRICT RULES:
 - Base your answers ONLY on the text in the sections below. Do not use external knowledge.
-${fallbackRule}
+- If the answer is not in the content, say so clearly and you MUST include the crawled page URL(s) and/or main site URL as clickable markdown links. Never give a generic suggestion like "visit the main site" without the actual link.
+${urlFallbackSection}
 - Do not add facts, examples, or details that are not explicitly in the content.
 - When citing, paraphrase or quote from the content. Do not invent.
 
-Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting URLs, use markdown links: [text](url).
+Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting URLs, ALWAYS use markdown links: [text](url).
 
 --- WEBPAGE CONTENT ---
 
