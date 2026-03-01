@@ -19,7 +19,11 @@ function MainContent({ children }: { children: React.ReactNode }) {
 }
 
 interface ShellWithNavigationProps {
-  user: { name?: string | null; email?: string | null } | null;
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
   guestRemaining?: number;
   children: React.ReactNode;
 }

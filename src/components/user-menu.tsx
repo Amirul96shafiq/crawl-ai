@@ -11,7 +11,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -24,7 +24,11 @@ import { Archive, LogOut, Settings, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
-  user: { name?: string | null; email?: string | null } | null;
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
   guestRemaining?: number;
   collapsed?: boolean;
   initialLoading?: boolean;
@@ -98,12 +102,18 @@ export function UserMenu({
               {collapsed ? (
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Avatar className="h-7 w-7">
+                    {user.image && (
+                      <AvatarImage src={user.image} alt={user.name || "Avatar"} />
+                    )}
                     <AvatarFallback className="text-xs">{initials}</AvatarFallback>
                   </Avatar>
                 </Button>
               ) : (
             <Button variant="ghost" className="w-full justify-start gap-2 px-2">
               <Avatar className="h-7 w-7">
+                {user.image && (
+                  <AvatarImage src={user.image} alt={user.name || "Avatar"} />
+                )}
                 <AvatarFallback className="text-xs">{initials}</AvatarFallback>
               </Avatar>
               <span className="truncate text-sm">

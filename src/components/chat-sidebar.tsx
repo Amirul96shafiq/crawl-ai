@@ -84,7 +84,11 @@ interface ChatItem {
 }
 
 interface ChatSidebarProps {
-  user: { name?: string | null; email?: string | null } | null;
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
   guestRemaining?: number;
   collapsed?: boolean;
   onCollapseChange?: (collapsed: boolean) => void;

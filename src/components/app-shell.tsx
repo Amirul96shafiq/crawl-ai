@@ -25,7 +25,11 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const user = session?.user
-    ? { name: session.user.name, email: session.user.email }
+    ? {
+        name: session.user.name,
+        email: session.user.email,
+        image: (session.user as { image?: string | null }).image ?? null,
+      }
     : null;
 
   return (

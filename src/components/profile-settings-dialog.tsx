@@ -13,13 +13,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Trash2, Download, RefreshCw, ShieldAlert, Shield, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  Trash2,
+  Download,
+  RefreshCw,
+  ShieldAlert,
+  Shield,
+  ShieldCheck,
+  Camera,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { cn, generateStrongPassword, getPasswordScore } from "@/lib/utils";
 import { useAppearance } from "@/components/appearance-provider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type SettingsTab = "profile" | "appearance" | "account";
 
@@ -40,7 +50,11 @@ function ThemeIcon({ theme }: { theme: Theme }) {
 interface ProfileSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  user: { name?: string | null; email?: string | null };
+  user: {
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
 }
 
 export function ProfileSettingsDialog({
@@ -59,6 +73,8 @@ export function ProfileSettingsDialog({
   const [loading, setLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user.image ?? null);
 
   useEffect(() => {
     if (open) {
@@ -73,8 +89,9 @@ export function ProfileSettingsDialog({
   useEffect(() => {
     if (open) {
       setName(user.name ?? "");
+      setAvatarPreview(user.image ?? null);
     }
-  }, [open, user.name]);
+  }, [open, user.name, user.image]);
 
   function handleOpenChange(value: boolean) {
     if (!value) setDeleteConfirm("");
@@ -238,6 +255,71 @@ export function ProfileSettingsDialog({
         {tab === "profile" && (
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 px-6 pb-6">
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium">Avatar</h4>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16">
+                  {avatarPreview && (
+                    <AvatarImage src={avatarPreview} alt="Profile" />
+                  )}
+                  <AvatarFallback className="text-lg">
+                    {(user.name || user.email || "U")
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2">
+                  <Label
+                    htmlFor="profile-avatar"
+                    className="cursor-pointer inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Upload image
+                  </Label>
+                  <input
+                    id="profile-avatar"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    className="hidden"
+                    disabled={avatarLoading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarLoading(true);
+                      try {
+                        const formData = new FormData();
+                        formData.append("avatar", file);
+                        const res = await fetch("/api/avatar", {
+                          method: "POST",
+                          body: formData,
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                          toast.error(data.error || "Failed to upload avatar");
+                          return;
+                        }
+                        setAvatarPreview(data.image);
+                        if (data.image) {
+                          toast.success("Avatar updated successfully");
+                          router.refresh();
+                        }
+                      } catch {
+                        toast.error("Failed to upload avatar");
+                      } finally {
+                        setAvatarLoading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    JPEG, JPG, PNG, WebP. Max 2MB.
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="space-y-3">
               <h4 className="text-sm font-medium">Username</h4>
               <div className="space-y-2">
