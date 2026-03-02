@@ -233,7 +233,7 @@ export function ChatView({
         <div className="min-h-full flex flex-col">
           <div
             className={cn(
-              "sticky top-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 pt-6 pb-3",
+              "sticky top-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-15 md:px-4 pt-6 pb-3",
               compact && "py-2 px-2",
             )}
           >
