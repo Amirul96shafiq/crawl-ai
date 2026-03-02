@@ -1103,7 +1103,7 @@ export function ChatSidebar({
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden fixed top-3 left-3 z-40 bg-background/95 backdrop-blur-sm shadow-md border border-border/50 hover:bg-accent"
+                className="md:hidden fixed top-3 left-0 z-40 h-9 w-9 rounded-l-none rounded-r-md border border-l-0 border-border/50 bg-card hover:bg-accent shadow-none"
               >
                 <Menu className="h-5 w-5" />
               </Button>

@@ -176,6 +176,21 @@ export function ChatView({
   }
 
   const scrollRef = useScrollToBottom<HTMLDivElement>(displayMessages);
+  const messagesLengthRef = useRef(messages.length);
+
+  useEffect(() => {
+    if (messages.length > messagesLengthRef.current) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.role === "user") {
+        scrollRef.current?.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+    messagesLengthRef.current = messages.length;
+  }, [messages]);
+
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
 
