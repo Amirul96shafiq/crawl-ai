@@ -64,6 +64,7 @@ import {
   Pin,
   PinOff,
   Link2,
+  X,
 } from "lucide-react";
 
 const STORAGE_KEY_PREFIX = "chat-order-";
@@ -706,6 +707,7 @@ export function ChatSidebar({
   const [internalAuthTab, setInternalAuthTab] = useState<"login" | "register">(
     "login",
   );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthControlled =
     controlledAuthOpen !== undefined &&
@@ -1096,22 +1098,37 @@ export function ChatSidebar({
       </aside>
 
       {/* Mobile sidebar */}
-      <Sheet>
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden fixed top-3 left-0 z-40 h-9 w-9 rounded-l-none rounded-r-md border border-l-0 border-border/50 bg-card hover:bg-accent shadow-none"
+                className={cn(
+                  "md:hidden fixed top-3 z-[60] h-9 w-9 rounded-l-none rounded-r-md border border-l-0 border-border/50 bg-card hover:bg-accent shadow-none transition-[left] ease-in-out",
+                  mobileMenuOpen
+                    ? "left-[280px] duration-500"
+                    : "left-0 duration-300",
+                )}
               >
-                <Menu className="h-5 w-5" />
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </Button>
             </SheetTrigger>
           </TooltipTrigger>
-          <TooltipContent side="right">Open menu</TooltipContent>
+          <TooltipContent side="right">
+            {mobileMenuOpen ? "Close menu" : "Open menu"}
+          </TooltipContent>
         </Tooltip>
-        <SheetContent side="left" className="w-[280px] p-0">
+        <SheetContent
+          side="left"
+          className="w-[280px] p-0 bg-card"
+          showCloseButton={false}
+        >
           <SidebarContent
             user={user}
             guestRemaining={guestRemaining}
