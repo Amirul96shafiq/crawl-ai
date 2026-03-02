@@ -108,6 +108,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
 
   return (
     <ChatView
+      key={chat.id}
       chatId={chat.id}
       pages={chat.pages}
       initialMessages={chat.messages.map((m) => ({
