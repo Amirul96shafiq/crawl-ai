@@ -9,7 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, Clock } from "lucide-react";
 import { useRef, forwardRef, type KeyboardEvent } from "react";
 import { useTimeUntilMidnightUTC } from "@/hooks/use-time-until-midnight-utc";
 
@@ -58,15 +58,25 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
       <div className={cn(compact ? "p-2" : "p-4")}>
         <div className="mx-auto flex max-w-3xl flex-col gap-2">
           {remainingQuestions !== undefined && questionLimit !== undefined && (
-            <p className="text-xs text-muted-foreground">
-              {remainingQuestions}/{questionLimit} questions remaining
-              {resetsDaily ? " today" : ""}
-              {resetsDaily && timeUntilReset && (
-                <span className="ml-1">· {timeUntilReset}</span>
-              )}
-            </p>
+            <div className="flex justify-center">
+              <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[11px] font-medium text-muted-foreground backdrop-blur-sm">
+                <span>
+                  {remainingQuestions}/{questionLimit}
+                </span>
+                <span>questions remaining{resetsDaily ? " today" : ""}</span>
+                {resetsDaily && timeUntilReset && (
+                  <>
+                    <span className="text-muted-foreground/50">·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      Resets in {timeUntilReset}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           )}
-          <div className="flex gap-4 items-end">
+          <div className="relative">
             <Textarea
               ref={resolvedRef}
               value={input}
@@ -79,29 +89,31 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
                     : "Question limit reached for this chat"
                   : "Ask anything about the crawled page(s)..."
               }
-              className="min-h-[44px] max-h-[200px] resize-none"
+              className="min-h-[44px] max-h-[200px] resize-none pr-12 rounded-full py-4 px-6"
               rows={1}
               disabled={isDisabled}
             />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  onClick={onSubmit}
-                  disabled={!input.trim() || isDisabled}
-                  className="shrink-0 size-[44px]"
-                >
-                  <SendHorizontal className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                {disabled
-                  ? resetsDaily
-                    ? "Daily question limit reached"
-                    : "Question limit reached"
-                  : "Send message"}
-              </TooltipContent>
-            </Tooltip>
+            <div className="absolute bottom-1 right-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    onClick={onSubmit}
+                    disabled={!input.trim() || isDisabled}
+                    className="h-12 w-16 rounded-full"
+                  >
+                    <SendHorizontal className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {disabled
+                    ? resetsDaily
+                      ? "Daily question limit reached"
+                      : "Question limit reached"
+                    : "Send message"}
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </div>
       </div>
