@@ -178,7 +178,7 @@ export function ChatMessages({
                       key={q}
                       type="button"
                       onClick={() => onSuggestionClick(q)}
-                      className="rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+                      className="cursor-pointer rounded-full border bg-background px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
                       {q}
                     </button>
