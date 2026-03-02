@@ -11,6 +11,7 @@ import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { ArrowDown } from "lucide-react";
 
 interface MessageTokens {
   inputTokens?: number;
@@ -121,28 +122,32 @@ export function ChatView({
     [initialMessages],
   );
 
-  const displayMessages = messages.map((m, i) => {
-    const fetched = fetchedTokens[i];
-    const initial = initialMap.get(m.id);
-    const inputTokens = fetched?.inputTokens ?? initial?.inputTokens;
-    const outputTokens = fetched?.outputTokens ?? initial?.outputTokens;
-    const createdAt =
-      initial?.createdAt ??
-      (m as { createdAt?: Date }).createdAt?.toISOString?.() ??
-      new Date().toISOString();
-    return {
-      id: m.id,
-      role: m.role as "user" | "assistant",
-      content:
-        m.parts
-          ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-          .map((p) => p.text)
-          .join("") || "",
-      inputTokens,
-      outputTokens,
-      createdAt,
-    };
-  });
+  const displayMessages = useMemo(
+    () =>
+      messages.map((m, i) => {
+        const fetched = fetchedTokens[i];
+        const initial = initialMap.get(m.id);
+        const inputTokens = fetched?.inputTokens ?? initial?.inputTokens;
+        const outputTokens = fetched?.outputTokens ?? initial?.outputTokens;
+        const createdAt =
+          initial?.createdAt ??
+          (m as { createdAt?: Date }).createdAt?.toISOString?.() ??
+          new Date().toISOString();
+        return {
+          id: m.id,
+          role: m.role as "user" | "assistant",
+          content:
+            m.parts
+              ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
+              .map((p) => p.text)
+              .join("") || "",
+          inputTokens,
+          outputTokens,
+          createdAt,
+        };
+      }),
+    [messages, fetchedTokens, initialMap],
+  );
 
   const userMessageCount = displayMessages.filter(
     (m) => m.role === "user",
@@ -171,47 +176,78 @@ export function ChatView({
   }
 
   const scrollRef = useScrollToBottom<HTMLDivElement>(displayMessages);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShowScrollButton(!isAtBottom);
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
 
   return (
-    <div
-      ref={scrollRef}
-      className="h-full overflow-y-auto"
-    >
-      <div className="min-h-full flex flex-col">
-        <div
-          className={cn(
-            "sticky top-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 pt-6 pb-3",
-            compact && "py-2 px-2",
-          )}
-        >
-          <UrlBadge pages={pages} />
-        </div>
-        <div className="flex-1 flex flex-col pb-4">
-          <ChatMessages
-            scrollRef={scrollRef}
-            messages={displayMessages}
-            isLoading={isLoading}
-            highlightMessageId={highlightMessageId}
-            featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
-            primaryPageUrl={pages[0]?.url}
-            pages={pages}
-            onSuggestionClick={handleSuggestionClick}
-          />
-        </div>
-        <div className="sticky bottom-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <ChatInput
-            ref={inputRef}
-            input={input}
-            onChange={setInput}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            disabled={!canSendMessage}
-            remainingQuestions={remainingQuestions}
-            questionLimit={userMessageLimit}
-            resetsDaily={resetsDaily}
-          />
+    <div className="relative h-full">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="h-full overflow-y-auto"
+      >
+        <div className="min-h-full flex flex-col">
+          <div
+            className={cn(
+              "sticky top-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 pt-6 pb-3",
+              compact && "py-2 px-2",
+            )}
+          >
+            <UrlBadge pages={pages} />
+          </div>
+          <div className="flex-1 flex flex-col pb-4">
+            <ChatMessages
+              scrollRef={scrollRef}
+              messages={displayMessages}
+              isLoading={isLoading}
+              highlightMessageId={highlightMessageId}
+              featuredImageUrl={pages[0]?.featuredImageUrl ?? null}
+              primaryPageUrl={pages[0]?.url}
+              pages={pages}
+              onSuggestionClick={handleSuggestionClick}
+            />
+          </div>
+          <div className="sticky bottom-0 z-10 shrink-0 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+            <ChatInput
+              ref={inputRef}
+              input={input}
+              onChange={setInput}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              disabled={!canSendMessage}
+              remainingQuestions={remainingQuestions}
+              questionLimit={userMessageLimit}
+              resetsDaily={resetsDaily}
+            />
+          </div>
         </div>
       </div>
+      <button
+        onClick={scrollToBottom}
+        className={cn(
+          "absolute bottom-32 left-1/2 -translate-x-1/2 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-opacity duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+          showScrollButton ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
+        aria-label="Scroll to bottom"
+      >
+        <ArrowDown className="h-5 w-5" />
+      </button>
     </div>
   );
 }
