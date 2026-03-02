@@ -11,7 +11,7 @@ import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 interface MessageTokens {
   inputTokens?: number;
@@ -177,12 +177,16 @@ export function ChatView({
 
   const scrollRef = useScrollToBottom<HTMLDivElement>(displayMessages);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showScrollTopButton, setShowScrollTopButton] = useState(false);
 
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 100;
+      const isAtTop = scrollTop < 100;
+
       setShowScrollButton(!isAtBottom);
+      setShowScrollTopButton(!isAtTop);
     }
   };
 
@@ -190,6 +194,15 @@ export function ChatView({
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: 0,
         behavior: "smooth",
       });
     }
@@ -239,10 +252,24 @@ export function ChatView({
         </div>
       </div>
       <button
+        onClick={scrollToTop}
+        className={cn(
+          "absolute top-18 left-1/2 -translate-x-1/2 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+          showScrollTopButton
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 -translate-y-4 pointer-events-none",
+        )}
+        aria-label="Scroll to top"
+      >
+        <ArrowUp className="h-5 w-5" />
+      </button>
+      <button
         onClick={scrollToBottom}
         className={cn(
-          "absolute bottom-32 left-1/2 -translate-x-1/2 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-opacity duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
-          showScrollButton ? "opacity-100" : "opacity-0 pointer-events-none",
+          "absolute bottom-28 left-1/2 -translate-x-1/2 z-50 rounded-full bg-primary p-2 text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+          showScrollButton
+            ? "opacity-100 translate-y-0 pointer-events-auto"
+            : "opacity-0 translate-y-4 pointer-events-none",
         )}
         aria-label="Scroll to bottom"
       >
