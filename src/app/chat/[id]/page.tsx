@@ -14,6 +14,13 @@ interface ChatPageProps {
   params: Promise<{ id: string }>;
 }
 
+/**
+ * generateMetadata function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export async function generateMetadata({
   params,
 }: ChatPageProps): Promise<Metadata> {
@@ -47,6 +54,13 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * ChatPage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export default async function ChatPage({ params }: ChatPageProps) {
   const { id } = await params;
   const session = await auth();

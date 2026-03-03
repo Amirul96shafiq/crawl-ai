@@ -8,6 +8,10 @@ export interface CallerIdentity {
   id: string;
 }
 
+/**
+ * Resolves the current caller as either an authenticated user or persisted guest.
+ * Side effects: creates a Guest row + `guest_id` cookie when no identity exists.
+ */
 export async function getCallerIdentity(): Promise<CallerIdentity> {
   const session = await auth();
   if (session?.user?.id) {
@@ -32,6 +36,9 @@ export async function getCallerIdentity(): Promise<CallerIdentity> {
   return { type: "guest", id: guestId };
 }
 
+/**
+ * Returns remaining guest chat creations for the current UTC day window.
+ */
 export async function checkGuestRateLimit(
   guestId: string,
 ): Promise<{ allowed: boolean; remaining: number }> {

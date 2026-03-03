@@ -4,6 +4,13 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
+/**
+ * getDatabaseUrl function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function getDatabaseUrl(): string {
   const env = process.env.DATABASE_URL;
   if (!env) {
@@ -15,6 +22,13 @@ function getDatabaseUrl(): string {
   return `file:${resolved}`;
 }
 
+/**
+ * createPrismaClient function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function createPrismaClient() {
   const adapter = new PrismaBetterSqlite3({
     url: getDatabaseUrl(),

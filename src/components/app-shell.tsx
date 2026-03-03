@@ -4,6 +4,13 @@ import { prisma } from "@/lib/db";
 import { GUEST_COOKIE_NAME, GUEST_DAILY_CHAT_LIMIT } from "@/lib/constants";
 import { ShellWithNavigation } from "@/components/shell-with-navigation";
 
+/**
+ * AppShell function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
   let guestRemaining: number | undefined;
@@ -29,6 +36,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         name: session.user.name,
         email: session.user.email,
         image: (session.user as { image?: string | null }).image ?? null,
+        imageUpdatedAt: (session.user as { imageUpdatedAt?: Date | null })
+          .imageUpdatedAt ?? null,
       }
     : null;
 

@@ -6,6 +6,13 @@ import { Checkbox as CheckboxPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * Checkbox function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function Checkbox({
   className,
   ...props

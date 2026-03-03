@@ -15,6 +15,13 @@ interface GuestLimitProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * GuestLimitProvider function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function GuestLimitProvider({
   guestRemaining,
   onOpenRegister,
@@ -28,6 +35,13 @@ export function GuestLimitProvider({
   );
 }
 
+/**
+ * useGuestLimit function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function useGuestLimit() {
   return useContext(GuestLimitContext);
 }

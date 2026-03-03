@@ -4,6 +4,13 @@ import { NewChatDialog } from "@/components/new-chat-dialog";
 import { useGuestLimit } from "@/components/guest-limit-context";
 import { Globe } from "lucide-react";
 
+/**
+ * HomePage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export default function HomePage() {
   const guestLimit = useGuestLimit();
 

@@ -5,6 +5,13 @@ import { ScrollArea as ScrollAreaPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * ScrollArea function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function ScrollArea({
   className,
   children,
@@ -28,6 +35,13 @@ function ScrollArea({
   );
 }
 
+/**
+ * ScrollBar function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function ScrollBar({
   className,
   orientation = "vertical",

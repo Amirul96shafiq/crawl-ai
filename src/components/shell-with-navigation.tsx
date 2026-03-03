@@ -10,6 +10,13 @@ import {
   useNavigationLoading,
 } from "@/components/navigation-loading-context";
 
+/**
+ * MainContent function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function MainContent({ children }: { children: React.ReactNode }) {
   const nav = useNavigationLoading();
   const isNavigating = nav?.isNavigating ?? false;
@@ -26,11 +33,19 @@ interface ShellWithNavigationProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    imageUpdatedAt?: Date | string | null;
   } | null;
   guestRemaining?: number;
   children: React.ReactNode;
 }
 
+/**
+ * ShellWithNavigation function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ShellWithNavigation({
   user,
   guestRemaining,

@@ -193,6 +193,13 @@ Start with a solid EDA, then iterate on modeling!`,
   },
 ];
 
+/**
+ * main function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 async function main() {
   const chat = await prisma.chat.findFirst({
     where: {

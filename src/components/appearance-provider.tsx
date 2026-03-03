@@ -29,6 +29,13 @@ interface AppearanceContextValue {
 
 const AppearanceContext = createContext<AppearanceContextValue | null>(null);
 
+/**
+ * AppearanceProvider function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function AppearanceProvider({
   children,
 }: {
@@ -77,6 +84,13 @@ export function AppearanceProvider({
   );
 }
 
+/**
+ * useAppearance function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function useAppearance() {
   const ctx = useContext(AppearanceContext);
   if (!ctx) {

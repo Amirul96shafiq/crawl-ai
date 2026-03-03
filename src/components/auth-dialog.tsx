@@ -32,6 +32,13 @@ interface AuthDialogProps {
   defaultTab?: AuthTab;
 }
 
+/**
+ * AuthDialog function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function AuthDialog({
   open,
   onOpenChange,
@@ -48,6 +55,13 @@ export function AuthDialog({
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /**
+   * resetForm function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function resetForm() {
     setEmail("");
     setPassword("");
@@ -55,16 +69,37 @@ export function AuthDialog({
     setLoading(false);
   }
 
+  /**
+   * switchTab function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function switchTab(newTab: AuthTab) {
     resetForm();
     setTab(newTab);
   }
 
+  /**
+   * handleOpenChange function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function handleOpenChange(value: boolean) {
     if (!value) resetForm();
     onOpenChange(value);
   }
 
+  /**
+   * handleLogin function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -89,6 +124,13 @@ export function AuthDialog({
     }
   }
 
+  /**
+   * handleRegister function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
 

@@ -3,6 +3,13 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 
+/**
+ * PATCH function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export async function PATCH(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {

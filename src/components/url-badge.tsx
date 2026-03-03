@@ -16,10 +16,24 @@ interface UrlBadgeProps {
   }[];
 }
 
+/**
+ * formatTokenCount function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function formatTokenCount(n: number): string {
   return n.toLocaleString();
 }
 
+/**
+ * UrlBadge function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function UrlBadge({ pages }: UrlBadgeProps) {
   if (!pages.length) return null;
 
@@ -31,6 +45,13 @@ export function UrlBadge({ pages }: UrlBadgeProps) {
   return (
     <div className="flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden pb-1 -mx-1 px-1 [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:h-1.5">
       {pages.map((page) => {
+        /**
+         * hostname function logic.
+         * Inputs: function parameters.
+         * Outputs: function return value.
+         * Side effects: none unless stated in implementation.
+         * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+         */
         const hostname = (() => {
           try {
             return new URL(page.url).hostname;

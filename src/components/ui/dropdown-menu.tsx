@@ -6,12 +6,26 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+/**
+ * DropdownMenu function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
+/**
+ * DropdownMenuPortal function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuPortal({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
@@ -20,6 +34,13 @@ function DropdownMenuPortal({
   );
 }
 
+/**
+ * DropdownMenuTrigger function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
@@ -31,6 +52,13 @@ function DropdownMenuTrigger({
   );
 }
 
+/**
+ * DropdownMenuContent function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuContent({
   className,
   sideOffset = 4,
@@ -51,6 +79,13 @@ function DropdownMenuContent({
   );
 }
 
+/**
+ * DropdownMenuGroup function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
@@ -59,6 +94,13 @@ function DropdownMenuGroup({
   );
 }
 
+/**
+ * DropdownMenuItem function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuItem({
   className,
   inset,
@@ -82,6 +124,13 @@ function DropdownMenuItem({
   );
 }
 
+/**
+ * DropdownMenuCheckboxItem function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuCheckboxItem({
   className,
   children,
@@ -108,6 +157,13 @@ function DropdownMenuCheckboxItem({
   );
 }
 
+/**
+ * DropdownMenuRadioGroup function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
@@ -119,6 +175,13 @@ function DropdownMenuRadioGroup({
   );
 }
 
+/**
+ * DropdownMenuRadioItem function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuRadioItem({
   className,
   children,
@@ -143,6 +206,13 @@ function DropdownMenuRadioItem({
   );
 }
 
+/**
+ * DropdownMenuLabel function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuLabel({
   className,
   inset,
@@ -163,6 +233,13 @@ function DropdownMenuLabel({
   );
 }
 
+/**
+ * DropdownMenuSeparator function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuSeparator({
   className,
   ...props
@@ -176,6 +253,13 @@ function DropdownMenuSeparator({
   );
 }
 
+/**
+ * DropdownMenuShortcut function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuShortcut({
   className,
   ...props
@@ -192,12 +276,26 @@ function DropdownMenuShortcut({
   );
 }
 
+/**
+ * DropdownMenuSub function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuSub({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
 }
 
+/**
+ * DropdownMenuSubTrigger function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuSubTrigger({
   className,
   inset,
@@ -222,6 +320,13 @@ function DropdownMenuSubTrigger({
   );
 }
 
+/**
+ * DropdownMenuSubContent function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function DropdownMenuSubContent({
   className,
   ...props

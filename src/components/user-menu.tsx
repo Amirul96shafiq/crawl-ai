@@ -21,13 +21,14 @@ import {
 import { AuthDialog } from "@/components/auth-dialog";
 import { ProfileSettingsDialog } from "@/components/profile-settings-dialog";
 import { Archive, LogOut, Settings, User as UserIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getAvatarUrl } from "@/lib/utils";
 
 interface UserMenuProps {
   user: {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    imageUpdatedAt?: Date | string | null;
   } | null;
   guestRemaining?: number;
   collapsed?: boolean;
@@ -40,6 +41,13 @@ interface UserMenuProps {
   onOpenAuth?: (tab: "login" | "register") => void;
 }
 
+/**
+ * UserMenu function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function UserMenu({
   user,
   guestRemaining,
@@ -98,6 +106,7 @@ export function UserMenu({
       .join("")
       .toUpperCase()
       .slice(0, 2);
+    const avatarSrc = getAvatarUrl(user.image, user.imageUpdatedAt);
 
     return (
       <DropdownMenu>
@@ -107,9 +116,9 @@ export function UserMenu({
               {collapsed ? (
                 <Button variant="ghost" size="icon" className="h-8 w-8">
                   <Avatar className="h-7 w-7">
-                    {user.image && (
+                    {avatarSrc && (
                       <AvatarImage
-                        src={user.image}
+                        src={avatarSrc}
                         alt={user.name || "Avatar"}
                       />
                     )}
@@ -124,9 +133,9 @@ export function UserMenu({
                   className="w-full justify-start gap-2 px-2"
                 >
                   <Avatar className="h-7 w-7">
-                    {user.image && (
+                    {avatarSrc && (
                       <AvatarImage
-                        src={user.image}
+                        src={avatarSrc}
                         alt={user.name || "Avatar"}
                       />
                     )}
@@ -177,6 +186,13 @@ export function UserMenu({
     );
   }
 
+  /**
+   * openAuth function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function openAuth(tab: "login" | "register") {
     if (controlledOnOpenAuth) {
       controlledOnOpenAuth(tab);

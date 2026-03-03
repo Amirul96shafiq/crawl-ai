@@ -26,7 +26,12 @@ import {
 import { toast } from "sonner";
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { cn, generateStrongPassword, getPasswordScore } from "@/lib/utils";
+import {
+  cn,
+  generateStrongPassword,
+  getAvatarUrl,
+  getPasswordScore,
+} from "@/lib/utils";
 import { useAppearance } from "@/components/appearance-provider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +41,13 @@ type SettingsTab = "profile" | "appearance" | "account";
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
 
+/**
+ * ThemeIcon function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function ThemeIcon({ theme }: { theme: Theme }) {
   switch (theme) {
     case "light":
@@ -54,9 +66,17 @@ interface ProfileSettingsDialogProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    imageUpdatedAt?: Date | string | null;
   };
 }
 
+/**
+ * ProfileSettingsDialog function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ProfileSettingsDialog({
   open,
   onOpenChange,
@@ -82,7 +102,7 @@ export function ProfileSettingsDialog({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    user.image ?? null,
+    getAvatarUrl(user.image, user.imageUpdatedAt) ?? null,
   );
 
   useEffect(() => {
@@ -98,15 +118,31 @@ export function ProfileSettingsDialog({
   useEffect(() => {
     if (open) {
       setName(user.name ?? "");
-      setAvatarPreview(user.image ?? null);
+      setAvatarPreview(
+        getAvatarUrl(user.image, user.imageUpdatedAt) ?? null,
+      );
     }
-  }, [open, user.name, user.image]);
+  }, [open, user.name, user.image, user.imageUpdatedAt]);
 
+  /**
+   * handleOpenChange function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function handleOpenChange(value: boolean) {
     if (!value) setDeleteConfirm("");
     onOpenChange(value);
   }
 
+  /**
+   * handleExport function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleExport() {
     try {
       const res = await fetch("/api/account/export");
@@ -124,6 +160,13 @@ export function ProfileSettingsDialog({
     }
   }
 
+  /**
+   * handleDeleteAccount function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleDeleteAccount(e: React.FormEvent) {
     e.preventDefault();
     if (deleteConfirm !== "delete") {
@@ -153,6 +196,13 @@ export function ProfileSettingsDialog({
     }
   }
 
+  /**
+   * handleSubmit function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -313,10 +363,14 @@ export function ProfileSettingsDialog({
                               );
                               return;
                             }
-                            setAvatarPreview(data.image);
+                            setAvatarPreview(
+                              data.image
+                                ? `${data.image}?t=${Date.now()}`
+                                : null,
+                            );
                             if (data.image) {
                               toast.success("Avatar updated successfully");
-                              router.refresh();
+                              await router.refresh();
                             }
                           } catch {
                             toast.error("Failed to upload avatar");

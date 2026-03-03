@@ -17,6 +17,13 @@ interface NavigationLoadingContextValue {
 const NavigationLoadingContext =
   createContext<NavigationLoadingContextValue | null>(null);
 
+/**
+ * NavigationLoadingProvider function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function NavigationLoadingProvider({
   children,
 }: {
@@ -51,6 +58,13 @@ export function NavigationLoadingProvider({
   );
 }
 
+/**
+ * useNavigationLoading function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function useNavigationLoading() {
   const ctx = useContext(NavigationLoadingContext);
   return ctx;

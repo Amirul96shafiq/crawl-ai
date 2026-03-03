@@ -5,6 +5,13 @@ export const CHAT_LINE_SPACING_STORAGE_KEY = "echologue-chat-line-spacing";
 export type ChatFontSize = "small" | "default" | "large";
 export type ChatLineSpacing = "tight" | "default" | "relaxed";
 
+/**
+ * getCompactFromStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function getCompactFromStorage(): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -14,6 +21,13 @@ export function getCompactFromStorage(): boolean {
   }
 }
 
+/**
+ * setCompactInStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function setCompactInStorage(value: boolean): void {
   if (typeof window === "undefined") return;
   try {
@@ -23,6 +37,13 @@ export function setCompactInStorage(value: boolean): void {
   }
 }
 
+/**
+ * getChatFontSizeFromStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function getChatFontSizeFromStorage(): ChatFontSize {
   if (typeof window === "undefined") return "default";
   try {
@@ -34,6 +55,13 @@ export function getChatFontSizeFromStorage(): ChatFontSize {
   }
 }
 
+/**
+ * setChatFontSizeInStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function setChatFontSizeInStorage(value: ChatFontSize): void {
   if (typeof window === "undefined") return;
   try {
@@ -43,6 +71,13 @@ export function setChatFontSizeInStorage(value: ChatFontSize): void {
   }
 }
 
+/**
+ * getChatLineSpacingFromStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function getChatLineSpacingFromStorage(): ChatLineSpacing {
   if (typeof window === "undefined") return "default";
   try {
@@ -54,6 +89,13 @@ export function getChatLineSpacingFromStorage(): ChatLineSpacing {
   }
 }
 
+/**
+ * setChatLineSpacingInStorage function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function setChatLineSpacingInStorage(value: ChatLineSpacing): void {
   if (typeof window === "undefined") return;
   try {

@@ -1,6 +1,13 @@
 import "dotenv/config";
 import { prisma } from "@/lib/db";
 
+/**
+ * main function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 async function main() {
   const targetUserId = "1";
 

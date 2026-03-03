@@ -12,6 +12,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
+      /**
+       * Validates credentials against stored password hash for login.
+       */
       async authorize(credentials) {
         const email = credentials?.email as string;
         const password = credentials?.password as string;
@@ -33,27 +36,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
+    /**
+     * Persists the authenticated user id inside the JWT token.
+     */
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
       }
       return token;
     },
+    /**
+     * Hydrates session user fields from the latest DB profile values.
+     */
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string;
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { name: true, email: true, image: true },
+          select: { name: true, email: true, image: true, imageUpdatedAt: true },
         });
         if (dbUser) {
           session.user.name = dbUser.name;
           session.user.email = dbUser.email;
           session.user.image = dbUser.image;
+          (session.user as { imageUpdatedAt?: Date | null }).imageUpdatedAt =
+            dbUser.imageUpdatedAt;
         }
       }
       return session;
     },
+    /**
+     * Migrates guest chats to the signed-in user as a best-effort step.
+     */
     async signIn({ user }) {
       if (!user?.id) return true;
 

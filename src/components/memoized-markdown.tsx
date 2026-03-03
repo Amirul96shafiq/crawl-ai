@@ -6,6 +6,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
+/**
+ * parseMarkdownIntoBlocks function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function parseMarkdownIntoBlocks(markdown: string): string[] {
   try {
     const tokens = marked.lexer(markdown);

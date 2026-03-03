@@ -4,6 +4,13 @@ import { prisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import { GUEST_COOKIE_NAME } from "@/lib/constants";
 
+/**
+ * POST function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export async function POST(request: Request) {
   const body = await request.json();
   const { name, email, password } = body;

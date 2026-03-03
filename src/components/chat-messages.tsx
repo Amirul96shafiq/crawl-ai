@@ -43,6 +43,13 @@ interface ChatMessagesProps {
   onSuggestionClick?: (text: string) => void;
 }
 
+/**
+ * ChatMessages function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ChatMessages({
   scrollRef,
   messages,
@@ -73,6 +80,13 @@ export function ChatMessages({
   useEffect(() => {
     if (!highlightMessageId || !scrollRef.current) return;
 
+    /**
+     * scrollToMessage function logic.
+     * Inputs: function parameters.
+     * Outputs: function return value.
+     * Side effects: none unless stated in implementation.
+     * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+     */
     function scrollToMessage() {
       const container = scrollRef.current;
       if (!container) return;

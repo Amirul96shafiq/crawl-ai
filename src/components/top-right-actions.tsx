@@ -24,6 +24,13 @@ import { SearchDialog } from "@/components/search-dialog";
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
 
+/**
+ * ThemeIcon function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function ThemeIcon({ theme }: { theme: Theme }) {
   switch (theme) {
     case "light":
@@ -43,6 +50,13 @@ interface TopRightActionsProps {
   onSidebarCollapseToggle: () => void;
 }
 
+/**
+ * TopRightActions function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function TopRightActions({
   user,
   sidebarCollapsed,
@@ -59,6 +73,13 @@ export function TopRightActions({
     let observer: ResizeObserver | null = null;
     let scrollElement: HTMLElement | null = null;
 
+    /**
+     * checkScrollbar function logic.
+     * Inputs: function parameters.
+     * Outputs: function return value.
+     * Side effects: none unless stated in implementation.
+     * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+     */
     const checkScrollbar = () => {
       const currentScrollElement = document.querySelector(
         "main .overflow-y-auto",

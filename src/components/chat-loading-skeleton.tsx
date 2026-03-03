@@ -1,5 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+/**
+ * ChatLoadingSkeleton function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ChatLoadingSkeleton() {
   return (
     <div className="flex flex-col h-full">

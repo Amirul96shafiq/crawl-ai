@@ -26,6 +26,13 @@ const badgeVariants = cva(
   },
 );
 
+/**
+ * Badge function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function Badge({
   className,
   variant = "default",

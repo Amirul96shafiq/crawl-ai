@@ -11,6 +11,13 @@ const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const AVATAR_SIZE = 128;
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "avatars");
 
+/**
+ * POST function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -104,7 +111,7 @@ export async function POST(request: Request) {
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { image: imagePath },
+    data: { image: imagePath, imageUpdatedAt: new Date() },
   });
 
   return NextResponse.json({ image: imagePath });

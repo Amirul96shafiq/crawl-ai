@@ -24,6 +24,13 @@ export const metadata: Metadata = {
     "Provide a source and ask AI questions about its content. Powered by OpenAI.",
 };
 
+/**
+ * RootLayout function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

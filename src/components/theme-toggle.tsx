@@ -14,6 +14,13 @@ import { toast } from "sonner";
 const themes = ["light", "dark", "system"] as const;
 type Theme = (typeof themes)[number];
 
+/**
+ * ThemeIcon function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function ThemeIcon({ theme }: { theme: Theme }) {
   switch (theme) {
     case "light":
@@ -25,6 +32,13 @@ function ThemeIcon({ theme }: { theme: Theme }) {
   }
 }
 
+/**
+ * ThemeToggle function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

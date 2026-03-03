@@ -25,6 +25,13 @@ interface ChatInputProps {
 }
 
 export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
+  /**
+   * ChatInput function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function ChatInput(
     {
       input,
@@ -45,6 +52,13 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
 
     const isDisabled = disabled || isLoading;
 
+    /**
+     * handleKeyDown function logic.
+     * Inputs: function parameters.
+     * Outputs: function return value.
+     * Side effects: none unless stated in implementation.
+     * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+     */
     function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();

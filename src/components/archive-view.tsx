@@ -38,6 +38,13 @@ interface ChatWithMessages {
   messages: { id: string; role: string; content: string }[];
 }
 
+/**
+ * ArchiveView function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ArchiveView() {
   const searchParams = useSearchParams();
   const highlightChatId = searchParams.get("highlight") ?? undefined;
@@ -76,6 +83,13 @@ export function ArchiveView() {
     }
   }, [highlightChatId, chats]);
 
+  /**
+   * removeFromStoredOrder function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function removeFromStoredOrder(chatId: string) {
     if (typeof window === "undefined" || !identityKey) return;
     try {
@@ -89,6 +103,13 @@ export function ArchiveView() {
     }
   }
 
+  /**
+   * handleUnarchive function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleUnarchive(id: string) {
     try {
       const res = await fetch(`/api/chats/${id}`, {
@@ -102,7 +123,9 @@ export function ArchiveView() {
         if (selectedChat?.id === id) setDialogOpen(false);
         toast.success("Chat restored");
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("chat-restored"));
+          window.dispatchEvent(
+            new CustomEvent("chat-restored", { detail: { chatId: id } }),
+          );
         }
       } else {
         toast.error("Failed to restore chat");
@@ -112,6 +135,13 @@ export function ArchiveView() {
     }
   }
 
+  /**
+   * handleDelete function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleDelete(id: string) {
     try {
       const res = await fetch(`/api/chats/${id}`, { method: "DELETE" });
@@ -128,6 +158,13 @@ export function ArchiveView() {
     }
   }
 
+  /**
+   * handleChatClick function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleChatClick(chat: ArchivedChatItem) {
     setLoadingChat(true);
     setDialogOpen(true);

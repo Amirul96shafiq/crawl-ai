@@ -70,6 +70,13 @@ import {
 const STORAGE_KEY_PREFIX = "chat-order-";
 const MAX_CHAT_TITLE_LENGTH = 28;
 
+/**
+ * truncateTitle function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function truncateTitle(
   title: string,
   maxLen: number = MAX_CHAT_TITLE_LENGTH,
@@ -92,6 +99,7 @@ interface ChatSidebarProps {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    imageUpdatedAt?: Date | string | null;
   } | null;
   guestRemaining?: number;
   collapsed?: boolean;
@@ -102,6 +110,13 @@ interface ChatSidebarProps {
   onOpenAuth?: (tab: "login" | "register") => void;
 }
 
+/**
+ * getStoredOrder function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function getStoredOrder(identityKey: string): string[] {
   if (typeof window === "undefined") return [];
   try {
@@ -112,6 +127,13 @@ function getStoredOrder(identityKey: string): string[] {
   }
 }
 
+/**
+ * saveOrder function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function saveOrder(identityKey: string, orderedIds: string[]) {
   if (typeof window === "undefined") return;
   try {
@@ -124,15 +146,33 @@ function saveOrder(identityKey: string, orderedIds: string[]) {
   }
 }
 
-function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
-  const pinned = chats.filter((c) => c.pinnedAt);
-  const unpinned = chats.filter((c) => !c.pinnedAt);
-  if (orderedIds.length === 0) return chats;
+/**
+ * applyOrder function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
+function applyOrder(
+  chats: ChatItem[],
+  orderedIds: string[],
+  prependIds?: Set<string>,
+): ChatItem[] {
+  const prepended = prependIds
+    ? chats.filter((c) => prependIds.has(c.id))
+    : [];
+  const rest = prependIds
+    ? chats.filter((c) => !prependIds.has(c.id))
+    : chats;
+  const pinned = rest.filter((c) => c.pinnedAt);
+  const unpinned = rest.filter((c) => !c.pinnedAt);
+  if (orderedIds.length === 0 && prepended.length === 0) return chats;
   const pinnedById = new Map(pinned.map((c) => [c.id, c]));
   const unpinnedById = new Map(unpinned.map((c) => [c.id, c]));
   const orderedPinned: ChatItem[] = [];
   const orderedUnpinned: ChatItem[] = [];
   for (const id of orderedIds) {
+    if (prependIds?.has(id)) continue;
     const p = pinnedById.get(id);
     if (p) {
       orderedPinned.push(p);
@@ -147,9 +187,17 @@ function applyOrder(chats: ChatItem[], orderedIds: string[]): ChatItem[] {
   }
   for (const chat of pinnedById.values()) orderedPinned.push(chat);
   const remainingUnpinned = [...unpinnedById.values()];
-  return [...orderedPinned, ...orderedUnpinned, ...remainingUnpinned];
+  const orderedRest = [...orderedPinned, ...orderedUnpinned, ...remainingUnpinned];
+  return prepended.length > 0 ? [...prepended, ...orderedRest] : orderedRest;
 }
 
+/**
+ * SortableChatItem function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function SortableChatItem({
   chat,
   isActive,
@@ -392,6 +440,13 @@ function SortableChatItem({
 
 const CHATS_PAGE_SIZE = 30;
 
+/**
+ * SidebarContent function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 function SidebarContent({
   user,
   guestRemaining,
@@ -492,6 +547,13 @@ function SidebarContent({
     }),
   );
 
+  /**
+   * handleDragEnd function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id || !onReorder) return;
@@ -685,6 +747,13 @@ function SidebarContent({
   );
 }
 
+/**
+ * ChatSidebar function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ChatSidebar({
   user,
   guestRemaining,
@@ -757,31 +826,44 @@ export function ChatSidebar({
     ? pathname.split("/")[2]
     : null;
 
-  const fetchChats = useCallback(async (append: boolean) => {
-    if (!append) setInitialLoading(true);
-    try {
-      const skip = append ? chatsLengthRef.current : 0;
-      const res = await fetch(
-        `/api/chats?limit=${CHATS_PAGE_SIZE}&skip=${skip}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const rawChats = data.chats as ChatItem[];
-        const key = data.identityKey as string | undefined;
-        const more = data.hasMore as boolean;
-        if (key) setIdentityKey(key);
-        const orderedIds = key ? getStoredOrder(key) : [];
-        const ordered = applyOrder(rawChats, orderedIds);
-        setChats((prev) => (append ? [...prev, ...ordered] : ordered));
-        setHasMore(more);
+  const fetchChats = useCallback(
+    async (append: boolean, prependChatId?: string) => {
+      if (!append) setInitialLoading(true);
+      try {
+        const skip = append ? chatsLengthRef.current : 0;
+        const res = await fetch(
+          `/api/chats?limit=${CHATS_PAGE_SIZE}&skip=${skip}`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          const rawChats = data.chats as ChatItem[];
+          const key = data.identityKey as string | undefined;
+          const more = data.hasMore as boolean;
+          if (key) setIdentityKey(key);
+          let orderedIds = key ? getStoredOrder(key) : [];
+          if (prependChatId && key) {
+            orderedIds = [
+              prependChatId,
+              ...orderedIds.filter((id) => id !== prependChatId),
+            ];
+            saveOrder(key, orderedIds);
+          }
+          const prependIds = prependChatId
+            ? new Set([prependChatId])
+            : undefined;
+          const ordered = applyOrder(rawChats, orderedIds, prependIds);
+          setChats((prev) => (append ? [...prev, ...ordered] : ordered));
+          setHasMore(more);
+        }
+      } catch {
+        // silently fail
+      } finally {
+        if (!append) setInitialLoading(false);
+        setLoadingMore(false);
       }
-    } catch {
-      // silently fail
-    } finally {
-      if (!append) setInitialLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchChats(false);
@@ -799,7 +881,10 @@ export function ChatSidebar({
   }, [pathname, fetchChats]);
 
   useEffect(() => {
-    const handler = () => fetchChats(false);
+    const handler = (e: Event) => {
+      const { chatId } = (e as CustomEvent<{ chatId: string }>).detail ?? {};
+      fetchChats(false, chatId);
+    };
     window.addEventListener("chat-restored", handler);
     return () => window.removeEventListener("chat-restored", handler);
   }, [fetchChats]);
@@ -810,6 +895,13 @@ export function ChatSidebar({
   chatsRef.current = chats;
 
   useEffect(() => {
+    /**
+     * handler function logic.
+     * Inputs: function parameters.
+     * Outputs: function return value.
+     * Side effects: none unless stated in implementation.
+     * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+     */
     const handler = (e: Event) => {
       const { chatId } = (e as CustomEvent<{ chatId: string }>).detail ?? {};
       const key = identityKeyRef.current;
@@ -853,6 +945,13 @@ export function ChatSidebar({
     fetchChats(true);
   }, [loadingMore, hasMore, fetchChats]);
 
+  /**
+   * handleReorder function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function handleReorder(orderedIds: string[]) {
     const pinnedIds = new Set(chats.filter((c) => c.pinnedAt).map((c) => c.id));
     const orderedPinned = orderedIds.filter((id) => pinnedIds.has(id));
@@ -870,6 +969,13 @@ export function ChatSidebar({
     if (identityKey) saveOrder(identityKey, sanitizedIds);
   }
 
+  /**
+   * handleDelete function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleDelete(id: string) {
     try {
       const res = await fetch(`/api/chats/${id}`, { method: "DELETE" });
@@ -885,6 +991,13 @@ export function ChatSidebar({
     }
   }
 
+  /**
+   * handleArchive function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleArchive(id: string) {
     try {
       const res = await fetch(`/api/chats/${id}`, {
@@ -910,6 +1023,13 @@ export function ChatSidebar({
     }
   }
 
+  /**
+   * handleRename function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handleRename(id: string, title: string) {
     const oldTitle = chats.find((c) => c.id === id)?.title || "New Chat";
     try {
@@ -929,6 +1049,13 @@ export function ChatSidebar({
     }
   }
 
+  /**
+   * sortChatsWithPinnedFirst function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function sortChatsWithPinnedFirst(chats: ChatItem[]): ChatItem[] {
     const pinned = chats.filter((c) => c.pinnedAt);
     const unpinned = chats.filter((c) => !c.pinnedAt);
@@ -940,6 +1067,13 @@ export function ChatSidebar({
     return [...pinned, ...unpinned];
   }
 
+  /**
+   * handlePin function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   async function handlePin(id: string, pinned: boolean) {
     try {
       const res = await fetch(`/api/chats/${id}`, {
