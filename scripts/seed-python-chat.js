@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * One-time script to add sample long conversation to "Python Data Science" archived chat.
  * Run: node scripts/seed-python-chat.js

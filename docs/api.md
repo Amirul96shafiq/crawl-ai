@@ -2,6 +2,12 @@
 
 All API routes are under `src/app/api/`.
 
+Error responses are normalized to:
+
+```json
+{ "error": "message", "code": "OPTIONAL_CODE", "details": {} }
+```
+
 ---
 
 ## POST /api/register
@@ -55,10 +61,11 @@ Crawl a URL and return extracted content + discovered links.
 **Logic:**
 
 1. Validate URL format
-2. Fetch HTML with `fetch()` (with timeout and user-agent header)
-3. Parse with JSDOM + Mozilla Readability
-4. Extract all `<a>` links from the content (same-domain, deduplicated)
-5. Return extracted text + link list
+2. Enforce crawler guardrails (http/https only, block private/local targets, HTML-only responses, size cap)
+3. Fetch HTML with `fetch()` (timeout + user-agent header)
+4. Parse with JSDOM + Mozilla Readability
+5. Extract all `<a>` links from the content (same-domain, deduplicated)
+6. Return extracted text + link list
 
 **Response:** `200 OK`
 
@@ -136,8 +143,9 @@ List all chats for the current user or guest.
 **Logic:**
 
 1. Identify caller (session userId or guest_id cookie)
-2. Query chats ordered by `createdAt` descending
-3. Return chat list with titles and page URLs
+2. Apply pagination (`limit`, `skip`) and archive filter
+3. Active chats are returned pinned-first, then newest unpinned
+4. Return chat list with titles/page URLs and paging metadata
 
 **Response:** `200 OK`
 
@@ -266,7 +274,88 @@ Streaming AI chat endpoint. Uses Vercel AI SDK.
 
 - `404` - Chat not found or not owned by caller
 - `429` - Per-chat question limit exceeded (guest: 5 total, user: 30/day). Response: `{ error, limit, remaining: 0 }`
-- `500` - OpenAI API error
+- `500` - OpenAI API or persistence error
+
+---
+
+## GET /api/search
+
+Search chat titles, messages, page content, and page URLs for the current caller.
+
+**Query params:**
+
+- `q` (required): search query, min 2 chars
+- `scope`: `all` (default) or `current`
+- `chatId`: required when `scope=current`; used as boost when `scope=all`
+- `includeArchived`: `true`/`false` (users only)
+
+**Response:** `200 OK`
+
+```json
+{
+  "results": [
+    {
+      "chatId": "chat_1",
+      "chatTitle": "Understanding React Hooks",
+      "archived": false,
+      "matches": [
+        { "type": "message", "snippet": "...hooks...", "messageId": "msg_1" }
+      ]
+    }
+  ]
+}
+```
+
+**Errors:**
+
+- `400` - Query too short / missing `chatId` for current scope
+- `401` - Guest requesting `includeArchived=true`
+
+---
+
+## POST /api/avatar
+
+Upload and process the authenticated user's avatar image.
+
+**Request:** multipart form-data with `avatar` file
+
+**Rules:**
+
+- Allowed types: JPEG/JPG/PNG/WebP
+- Max size: 2MB
+- Stored as `public/uploads/avatars/{userId}.jpg` after resize/crop
+
+**Response:** `200 OK`
+
+```json
+{ "image": "/uploads/avatars/user-id.jpg" }
+```
+
+**Errors:**
+
+- `401` - Not authenticated
+- `400` - Missing file / invalid format / file too large
+- `500` - Processing or file write failure
+
+---
+
+## GET /api/debug-identity (development only)
+
+Debug endpoint for local diagnosis of caller identity mapping.
+
+**Response:** `200 OK` (development only)
+
+```json
+{
+  "callerType": "guest",
+  "callerId": "guest_cuid",
+  "chatCount": 2
+}
+```
+
+**Errors:**
+
+- `404` - Non-development environments
 
 ---
 

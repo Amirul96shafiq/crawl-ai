@@ -6,7 +6,10 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node -e \"console.log('No automated tests configured yet.')\"",
+    "ci:check": "npm run lint && npm run typecheck && npm run test"
   },
   "dependencies": {
     "@ai-sdk/azure": "^3.0.38",

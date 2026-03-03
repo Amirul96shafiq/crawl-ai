@@ -14,6 +14,7 @@ model User {
   name         String?
   email        String   @unique
   passwordHash String
+  image        String?
   createdAt    DateTime @default(now())
   chats        Chat[]
 }
@@ -37,21 +38,23 @@ A conversation session tied to one or more crawled web pages. Owned by either a 
 
 ```prisma
 model Chat {
-  id        String     @id @default(cuid())
-  userId    String?
-  user      User?      @relation(fields: [userId], references: [id])
-  guestId   String?
-  guest     Guest?     @relation(fields: [guestId], references: [id])
-  title     String?
-  pinnedAt  DateTime?
-  createdAt DateTime   @default(now())
-  pages     ChatPage[]
-  messages  Message[]
+  id         String     @id @default(cuid())
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id])
+  guestId    String?
+  guest      Guest?     @relation(fields: [guestId], references: [id])
+  title      String?
+  pinnedAt   DateTime?
+  archivedAt DateTime?
+  createdAt  DateTime   @default(now())
+  pages      ChatPage[]
+  messages   Message[]
 }
 ```
 
 - `pinnedAt`: When set, the chat is pinned and appears at the top of the sidebar. Guests may pin 1 chat; users may pin up to 5.
 - `archivedAt`: When set, the chat is archived (soft-deleted) and hidden from the sidebar. Data is preserved.
+- DB constraint enforces ownership XOR: exactly one of `userId` or `guestId` must be non-null.
 
 **Ownership rules:**
 
@@ -65,12 +68,14 @@ Stores the extracted text content from a single crawled URL. A chat can have mul
 
 ```prisma
 model ChatPage {
-  id      String @id @default(cuid())
-  chatId  String
-  chat    Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  url     String
-  title   String?
-  content String
+  id               String  @id @default(cuid())
+  chatId           String
+  chat             Chat    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  url              String
+  title            String?
+  content          String
+  featuredImageUrl String?
+  tokenCount       Int?
 }
 ```
 
@@ -80,12 +85,14 @@ A single message in a chat conversation. Role is either "user" or "assistant".
 
 ```prisma
 model Message {
-  id        String   @id @default(cuid())
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  role      String
-  content   String
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  chatId       String
+  chat         Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role         String
+  content      String
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime @default(now())
 }
 ```
 
@@ -103,6 +110,16 @@ User 1──* Chat *──1 Guest
 - A Chat has many ChatPages (1 primary + up to 5 sub-links)
 - A Chat has many Messages
 - Deleting a Chat cascades to its ChatPages and Messages
+
+## Indexes
+
+Key indexes currently used:
+
+- `Chat(userId)`, `Chat(guestId)` for ownership reads
+- `Chat(userId, createdAt)`, `Chat(guestId, createdAt)` for rate-limit/date scoped queries
+- `Chat(userId, pinnedAt)`, `Chat(guestId, pinnedAt)` for pinned ordering
+- `Chat(userId, archivedAt)`, `Chat(guestId, archivedAt)` for archive views
+- `Message(chatId)` and `Message(chatId, role, createdAt)` for per-chat message counters
 
 ## Guest Chat Migration
 
