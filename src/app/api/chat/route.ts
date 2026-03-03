@@ -225,7 +225,18 @@ Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting 
       },
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      messageMetadata: ({ part }) => {
+        if (part.type === "finish") {
+          return {
+            inputTokens: part.totalUsage?.inputTokens,
+            outputTokens: part.totalUsage?.outputTokens,
+            totalTokens: part.totalUsage?.totalTokens,
+            finishReason: part.finishReason,
+          };
+        }
+      },
+    });
   } catch (error) {
     console.error("Chat API error:", error);
     const errorText =

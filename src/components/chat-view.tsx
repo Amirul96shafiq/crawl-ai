@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { useSearchParams } from "next/navigation";
 import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
@@ -13,9 +13,11 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
-interface MessageTokens {
+export interface MessageMetadata {
   inputTokens?: number;
   outputTokens?: number;
+  totalTokens?: number;
+  finishReason?: string;
 }
 
 interface ChatViewProps {
@@ -56,15 +58,6 @@ export function ChatView({
   const [remainingFromSession, setRemainingFromSession] = useState(
     initialRemainingQuestions,
   );
-  const [fetchedTokensById, setFetchedTokensById] = useState<
-    Record<string, MessageTokens>
-  >({});
-  const [fetchedTokensByIndex, setFetchedTokensByIndex] = useState<
-    MessageTokens[]
-  >([]);
-  const wasLoadingRef = useRef(false);
-  const tokenFetchRequestRef = useRef(0);
-  const tokenFetchAbortRef = useRef<AbortController | null>(null);
   const { compact } = useAppearance();
   const searchParams = useSearchParams();
   const highlightMessageId = searchParams.get("highlight") ?? undefined;
@@ -74,12 +67,21 @@ export function ChatView({
     [chatId],
   );
 
-  const { messages, sendMessage, status, error } = useChat({
+  const { messages, sendMessage, status, error } = useChat<
+    UIMessage<MessageMetadata>
+  >({
     transport,
     messages: initialMessages.map((m) => ({
       id: m.id,
       role: m.role,
       parts: [{ type: "text" as const, text: m.content }],
+      metadata:
+        m.inputTokens != null || m.outputTokens != null
+          ? {
+              inputTokens: m.inputTokens ?? undefined,
+              outputTokens: m.outputTokens ?? undefined,
+            }
+          : undefined,
       createdAt: new Date(),
     })),
   });
@@ -99,65 +101,6 @@ export function ChatView({
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  useEffect(() => {
-    return () => {
-      tokenFetchAbortRef.current?.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    let timeoutId: ReturnType<typeof setTimeout> | undefined;
-    if (wasLoadingRef.current && !isLoading) {
-      tokenFetchRequestRef.current += 1;
-      const requestId = tokenFetchRequestRef.current;
-      tokenFetchAbortRef.current?.abort();
-      const controller = new AbortController();
-      tokenFetchAbortRef.current = controller;
-
-      const doFetch = () => {
-        fetch(`/api/chats/${chatId}`, { signal: controller.signal })
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (
-              !data?.messages?.length ||
-              requestId !== tokenFetchRequestRef.current
-            ) {
-              return;
-            }
-            const apiMessages = data.messages as {
-              id: string;
-              inputTokens?: number;
-              outputTokens?: number;
-            }[];
-            const byId: Record<string, MessageTokens> = {};
-            const byIndex: MessageTokens[] = [];
-            for (let i = 0; i < apiMessages.length; i++) {
-              const message = apiMessages[i];
-              const tokens = {
-                inputTokens: message.inputTokens,
-                outputTokens: message.outputTokens,
-              };
-              byId[message.id] = tokens;
-              byIndex[i] = tokens;
-            }
-            setFetchedTokensById(byId);
-            setFetchedTokensByIndex(byIndex);
-          })
-          .catch((error) => {
-            if (error instanceof DOMException && error.name === "AbortError") {
-              return;
-            }
-          });
-      };
-
-      timeoutId = setTimeout(doFetch, 350);
-    }
-    wasLoadingRef.current = isLoading;
-    return () => {
-      if (timeoutId != null) clearTimeout(timeoutId);
-    };
-  }, [isLoading, chatId]);
-
   const initialMap = useMemo(
     () =>
       new Map(
@@ -175,16 +118,13 @@ export function ChatView({
 
   const displayMessages = useMemo(
     () =>
-      messages.map((m, i) => {
-        const fetched = fetchedTokensById[m.id];
-        const byIndex = fetchedTokensByIndex[i];
+      messages.map((m) => {
+        const meta = m.metadata as MessageMetadata | undefined;
         const initial = initialMap.get(m.id);
         const inputTokens =
-          fetched?.inputTokens ?? byIndex?.inputTokens ?? initial?.inputTokens;
+          meta?.inputTokens ?? initial?.inputTokens ?? undefined;
         const outputTokens =
-          fetched?.outputTokens ??
-          byIndex?.outputTokens ??
-          initial?.outputTokens;
+          meta?.outputTokens ?? initial?.outputTokens ?? undefined;
         const createdAt =
           initial?.createdAt ??
           (m as { createdAt?: Date }).createdAt?.toISOString?.() ??
@@ -197,12 +137,12 @@ export function ChatView({
               ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
               .map((p) => p.text)
               .join("") || "",
-          inputTokens,
-          outputTokens,
+          inputTokens: inputTokens ?? null,
+          outputTokens: outputTokens ?? null,
           createdAt,
         };
       }),
-    [messages, fetchedTokensById, fetchedTokensByIndex, initialMap],
+    [messages, initialMap],
   );
 
   const userMessageCount = displayMessages.filter(
