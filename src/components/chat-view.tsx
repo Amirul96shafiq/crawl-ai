@@ -24,6 +24,7 @@ interface ChatViewProps {
     url: string;
     title: string | null;
     featuredImageUrl?: string | null;
+    images?: string | null;
     tokenCount?: number | null;
   }[];
   initialMessages: {

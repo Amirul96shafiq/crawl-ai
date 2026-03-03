@@ -8,7 +8,8 @@
 - Server fetches the page HTML using `fetch()`
 - JSDOM parses the HTML; Mozilla Readability extracts the main article content
 - Strips navigation, sidebars, ads, scripts, footers -- keeps only meaningful text
-- Returns clean text content + page title
+- Extracts in-page images from article HTML (max 10 per page, excludes tiny icons)
+- Returns clean text content + page title + images array (url, alt)
 
 ### Sub-Link Discovery
 
@@ -20,7 +21,8 @@
 
 ### Content Storage
 
-- Each crawled page is stored as a `ChatPage` record (url, title, content)
+- Each crawled page is stored as a `ChatPage` record (url, title, content, images)
+- Images are stored as JSON: `[{ "url": "...", "alt": "..." }]`
 - A chat can have 1 primary page + up to 5 sub-link pages (6 total max)
 
 ---
@@ -35,23 +37,12 @@
 
 ### Context Injection
 
-- On each message, the API loads all `ChatPage` content for the chat
-- System prompt structure:
-
-  ```
-  You are a helpful assistant. Answer questions based on the following webpage contents.
-
-  --- Page: {url1} ---
-  {content1}
-
-  --- Page: {url2} ---
-  {content2}
-
-  If the answer is not found in the provided content, say so clearly.
-  ```
-
+- On each message, the API loads all `ChatPage` content and images for the chat
+- A context user message is prepended with page text + image parts (up to 20 images total)
+- GPT-4.1-nano receives both text and images (vision) and can reference them in responses
+- System prompt contains instructions; page content and images are in the context message
 - Full conversation history is included in the messages array
-- GPT-4o-mini's 128K context window handles most multi-page scenarios
+- GPT-4.1-nano's context window handles most multi-page scenarios
 
 ### Auto-Generated Chat Titles
 
@@ -118,6 +109,7 @@
 | `MAX_PINNED_CHATS_GUEST`        | `1`          | Max pinned chats for guests                                     |
 | `MAX_PINNED_CHATS_USER`         | `5`          | Max pinned chats for users                                      |
 | `MAX_SUB_LINKS_PER_CHAT`        | `5`          | Sub-links per chat (same for both)                              |
+| `MAX_IMAGES_TOTAL_FOR_CHAT`     | `20`         | Max images passed to AI across all pages                        |
 
 ### Guest UI Restrictions
 

@@ -76,9 +76,17 @@ Crawl a URL and return extracted content + discovered links.
   "links": [
     { "url": "https://example.com/related-post", "text": "Related Post Title" },
     { "url": "https://example.com/another-page", "text": "Another Page" }
+  ],
+  "featuredImageUrl": "https://example.com/og-image.jpg",
+  "images": [
+    { "url": "https://example.com/article-image-1.jpg", "alt": "Chart" },
+    { "url": "https://example.com/article-image-2.jpg" }
   ]
 }
 ```
+
+- `featuredImageUrl`: From og:image/twitter:image meta tags, or `null`
+- `images`: In-page images from article content (max 10 per page), each with `url` and optional `alt`
 
 **Errors:**
 
@@ -99,7 +107,11 @@ Create a new chat with crawled page content.
   "primaryPage": {
     "url": "https://example.com/blog/article",
     "title": "Article Title",
-    "content": "Extracted text..."
+    "content": "Extracted text...",
+    "featuredImageUrl": "https://example.com/og-image.jpg",
+    "images": [
+      { "url": "https://example.com/article-image.jpg", "alt": "Chart" }
+    ]
   },
   "subLinkUrls": [
     "https://example.com/related-1",
@@ -107,6 +119,9 @@ Create a new chat with crawled page content.
   ]
 }
 ```
+
+- `primaryPage.featuredImageUrl` (optional): From crawl response
+- `primaryPage.images` (optional): In-page images from crawl response; stored as JSON on ChatPage
 
 **Logic:**
 
@@ -261,8 +276,8 @@ Streaming AI chat endpoint. Uses Vercel AI SDK.
 
 1. Identify caller and verify chat ownership
 2. Check per-chat message limit (guest: 5 total, user: 30 per day); if exceeded, return 429
-3. Load all ChatPage content for the chat
-4. Build system prompt with page contents
+3. Load all ChatPage content and images for the chat
+4. Build system prompt with page contents; prepend context user message with page text + image parts (up to 20 images) for vision-capable GPT-4.1-nano
 5. Call OpenAI via `streamText()` with full message history
 6. Stream response tokens back to the client
 7. After streaming completes, save both user message and assistant response to database

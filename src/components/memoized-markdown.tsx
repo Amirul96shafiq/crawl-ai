@@ -1,7 +1,7 @@
 "use client";
 
 import { marked } from "marked";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,47 @@ import { cn } from "@/lib/utils";
  * Side effects: none unless stated in implementation.
  * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
  */
+function sanitizeImageUrl(url: string): string {
+  const secondProto = url.indexOf("https://", 8);
+  if (secondProto > 0) return url.slice(secondProto);
+  const secondHttp = url.indexOf("http://", 7);
+  if (secondHttp > 0) return url.slice(secondHttp);
+  return url;
+}
+
+function MarkdownImage({
+  src,
+  alt,
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"img">) {
+  const raw = typeof src === "string" ? src : "";
+  const srcStr = sanitizeImageUrl(raw);
+  const isExternal =
+    srcStr.startsWith("http://") || srcStr.startsWith("https://");
+  const [useProxy, setUseProxy] = useState(false);
+
+  const imgSrc =
+    isExternal && srcStr
+      ? useProxy
+        ? `/api/image-proxy?url=${encodeURIComponent(srcStr)}`
+        : srcStr
+      : srcStr;
+
+  return (
+    <img
+      src={imgSrc}
+      alt={alt ?? ""}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className={cn("rounded-lg max-w-full h-auto my-2", className)}
+      onError={() => isExternal && !useProxy && setUseProxy(true)}
+      {...props}
+    />
+  );
+}
+
 function parseMarkdownIntoBlocks(markdown: string): string[] {
   try {
     const tokens = marked.lexer(markdown);
@@ -99,6 +140,9 @@ const MarkdownBlock = memo(
               <h3 className="mb-1 mt-2 text-sm font-bold first:mt-0">
                 {children}
               </h3>
+            ),
+            img: ({ src, alt, className, ...props }) => (
+              <MarkdownImage src={src} alt={alt} className={className} {...props} />
             ),
           }}
         >

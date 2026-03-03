@@ -55,6 +55,7 @@ model ChatPage {
   title             String?
   content           String
   featuredImageUrl  String?
+  images            String?
   tokenCount        Int?
 
   @@index([chatId])

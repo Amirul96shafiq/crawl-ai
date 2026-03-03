@@ -28,11 +28,17 @@ interface DiscoveredLink {
   text: string;
 }
 
+interface CrawlImage {
+  url: string;
+  alt?: string;
+}
+
 interface CrawlResult {
   title: string;
   content: string;
   links: DiscoveredLink[];
   featuredImageUrl?: string | null;
+  images?: CrawlImage[];
 }
 
 interface NewChatDialogProps {
@@ -197,6 +203,7 @@ export function NewChatDialog({
             title: crawlResult.title,
             content: crawlResult.content,
             featuredImageUrl: crawlResult.featuredImageUrl ?? null,
+            images: crawlResult.images ?? [],
           },
           subLinkUrls: Array.from(selectedLinks),
         }),

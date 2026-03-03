@@ -161,16 +161,23 @@ export async function POST(request: Request) {
               title: primaryPage.title || null,
               content: primaryPage.content,
               featuredImageUrl: primaryPage.featuredImageUrl ?? null,
+              images:
+                Array.isArray(primaryPage.images) && primaryPage.images.length > 0
+                  ? JSON.stringify(primaryPage.images)
+                  : null,
               tokenCount: countTokens(primaryPage.content),
             },
             ...(subPages
               .map((result, i) => {
                 if (result.status === "fulfilled") {
+                  const imgs = result.value.images ?? [];
                   return {
                     url: urlsToFetch[i],
                     title: result.value.title || null,
                     content: result.value.content,
                     featuredImageUrl: result.value.featuredImageUrl ?? null,
+                    images:
+                      imgs.length > 0 ? JSON.stringify(imgs) : null,
                     tokenCount: countTokens(result.value.content),
                   };
                 }
@@ -181,6 +188,7 @@ export async function POST(request: Request) {
               title: string | null;
               content: string;
               featuredImageUrl: string | null;
+              images: string | null;
               tokenCount: number;
             }[]),
           ],

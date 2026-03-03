@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useMemo, useState, type RefObject } from "react";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
 import { Bot, Calendar, Clock, Copy, MoreHorizontal } from "lucide-react";
@@ -24,6 +24,85 @@ interface DisplayMessage {
   createdAt?: string | null;
 }
 
+function sanitizeImageUrl(url: string): string {
+  const secondProto = url.indexOf("https://", 8);
+  if (secondProto > 0) return url.slice(secondProto);
+  const secondHttp = url.indexOf("http://", 7);
+  if (secondHttp > 0) return url.slice(secondHttp);
+  return url;
+}
+
+function proxyImageUrl(url: string): string {
+  const clean = sanitizeImageUrl(url);
+  if (clean.startsWith("http://") || clean.startsWith("https://")) {
+    return `/api/image-proxy?url=${encodeURIComponent(clean)}`;
+  }
+  return clean;
+}
+
+
+function PageImageThumbnail({
+  url,
+  alt,
+  size,
+}: {
+  url: string;
+  alt?: string;
+  size: string;
+}) {
+  const cleanUrl = sanitizeImageUrl(url);
+  const [src, setSrc] = useState(cleanUrl);
+  const [triedProxy, setTriedProxy] = useState(false);
+
+  const handleError = () => {
+    if (!triedProxy) {
+      setTriedProxy(true);
+      setSrc(proxyImageUrl(url));
+    }
+  };
+
+  return (
+    <a
+      href={cleanUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn("block rounded-lg overflow-hidden border bg-muted shrink-0", size)}
+    >
+      <img
+        src={src}
+        alt={alt ?? ""}
+        className="w-full h-full object-cover"
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={handleError}
+      />
+    </a>
+  );
+}
+
+function parsePageImages(
+  pages?: { url: string; title: string | null; images?: string | null }[],
+): { url: string; alt?: string }[] {
+  if (!pages?.length) return [];
+  const out: { url: string; alt?: string }[] = [];
+  for (const p of pages) {
+    if (!p.images) continue;
+    try {
+      const arr = JSON.parse(p.images) as { url: string; alt?: string }[];
+      if (Array.isArray(arr)) {
+        for (const img of arr) {
+          if (img?.url && typeof img.url === "string") {
+            out.push({ url: sanitizeImageUrl(img.url), alt: img.alt });
+          }
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return out.slice(0, 20);
+}
+
 const SUGGESTED_QUESTIONS = [
   "Summarize the main points",
   "What are the key takeaways?",
@@ -39,7 +118,7 @@ interface ChatMessagesProps {
   highlightMessageId?: string;
   featuredImageUrl?: string | null;
   primaryPageUrl?: string;
-  pages?: { url: string; title: string | null }[];
+  pages?: { url: string; title: string | null; images?: string | null }[];
   onSuggestionClick?: (text: string) => void;
 }
 
@@ -151,6 +230,8 @@ export function ChatMessages({
     </div>
   );
 
+  const pageImages = useMemo(() => parsePageImages(pages), [pages]);
+
   if (!messages.length) {
     let pageContext: string | null = null;
     if (pages && pages.length > 0) {
@@ -173,6 +254,23 @@ export function ChatMessages({
       <div className="h-full min-h-full flex flex-col items-center justify-center text-muted-foreground py-8">
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
           {featuredImageBlock}
+          {pageImages.length > 0 && (
+            <div className="w-full max-w-3xl mb-4">
+              <p className="text-xs text-muted-foreground mb-2">
+                Images from the page ({pageImages.length})
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {pageImages.map((img, i) => (
+                  <PageImageThumbnail
+                    key={img.url + i}
+                    url={img.url}
+                    alt={img.alt}
+                    size="w-24 h-24"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <div className="w-full max-w-2xl rounded-xl border bg-card p-6 shadow-sm">
             <div className="flex flex-col items-center text-center space-y-4">
               <Bot className="h-12 w-12 mx-auto opacity-50" />
@@ -208,6 +306,25 @@ export function ChatMessages({
 
   const lastMessage = messages[messages.length - 1];
 
+  const pageImagesGallery =
+    pageImages.length > 0 ? (
+      <div className="w-full mb-4">
+        <p className="text-xs text-muted-foreground mb-2">
+          Images from the page ({pageImages.length})
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {pageImages.map((img, i) => (
+            <PageImageThumbnail
+              key={img.url + i}
+              url={img.url}
+              alt={img.alt}
+              size="w-20 h-20"
+            />
+          ))}
+        </div>
+      </div>
+    ) : null;
+
   return (
     <div
       className={cn(
@@ -218,6 +335,7 @@ export function ChatMessages({
         className={cn("mx-auto max-w-3xl", compact ? "space-y-2" : "space-y-6")}
       >
         {featuredImageBlock}
+        {pageImagesGallery}
         {messages.map((message) => {
           const tokenCount =
             message.role === "user"

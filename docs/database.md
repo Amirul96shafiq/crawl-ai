@@ -75,9 +75,12 @@ model ChatPage {
   title            String?
   content          String
   featuredImageUrl String?
+  images           String?
   tokenCount       Int?
 }
 ```
+
+- `images`: JSON array of in-page images `[{ "url": "...", "alt": "..." }]`, or null
 
 ### Message
 

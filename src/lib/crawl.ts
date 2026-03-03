@@ -4,11 +4,17 @@ import { lookup } from "node:dns/promises";
 import net from "node:net";
 import { CRAWL_TIMEOUT_MS } from "@/lib/constants";
 
+export interface CrawlImage {
+  url: string;
+  alt?: string;
+}
+
 export interface CrawlResult {
   title: string;
   content: string;
   links: { url: string; text: string }[];
   featuredImageUrl?: string | null;
+  images: CrawlImage[];
 }
 
 /**
@@ -23,6 +29,7 @@ const BLOCKED_HOSTNAMES = new Set([
   "::1",
   "0.0.0.0",
 ]);
+const MAX_IMAGES_PER_PAGE = 10;
 
 /**
  * Returns true when the IPv4 address is private, loopback, or link-local.
@@ -144,12 +151,14 @@ export async function crawlUrl(inputUrl: string): Promise<CrawlResult> {
     const baseUrl = new URL(safeUrl.href);
     const links = extractLinks(dom, baseUrl);
     const featuredImageUrl = extractFeaturedImage(dom, baseUrl);
+    const images = extractArticleImages(article.content ?? "", baseUrl);
 
     return {
       title: article.title || "",
       content: article.textContent.trim(),
       links,
       featuredImageUrl,
+      images,
     };
   } finally {
     clearTimeout(timeout);
@@ -212,6 +221,66 @@ function extractLinks(
   return results;
 }
 
+function sanitizeImageUrl(url: string): string {
+  const secondProto = url.indexOf("https://", 8);
+  if (secondProto > 0) return url.slice(secondProto);
+  const secondHttp = url.indexOf("http://", 7);
+  if (secondHttp > 0) return url.slice(secondHttp);
+  return url;
+}
+
+/**
+ * Extracts in-page images from Readability article HTML.
+ * Resolves to absolute URLs, de-duplicates, and caps at MAX_IMAGES_PER_PAGE.
+ */
+function extractArticleImages(
+  articleHtml: string,
+  baseUrl: URL,
+): CrawlImage[] {
+  if (!articleHtml?.trim()) return [];
+
+  const fragment = new JSDOM(articleHtml, { url: baseUrl.href });
+  const imgs = fragment.window.document.querySelectorAll("img[src]");
+  const seen = new Set<string>();
+  const results: CrawlImage[] = [];
+
+  for (const img of imgs) {
+    if (results.length >= MAX_IMAGES_PER_PAGE) break;
+
+    const src = img.getAttribute("src")?.trim();
+    if (!src) continue;
+
+    if (src.startsWith("data:")) continue;
+
+    try {
+      const resolved = new URL(src, baseUrl.origin);
+      if (!ALLOWED_PROTOCOLS.has(resolved.protocol)) continue;
+
+      const width = img.getAttribute("width");
+      const height = img.getAttribute("height");
+      const w = width ? parseInt(width, 10) : NaN;
+      const h = height ? parseInt(height, 10) : NaN;
+      if (Number.isFinite(w) && w < 80) continue;
+      if (Number.isFinite(h) && h < 80) continue;
+
+      resolved.hash = "";
+      let normalized = resolved.href;
+      normalized = sanitizeImageUrl(normalized);
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+
+      results.push({
+        url: normalized,
+        alt: img.getAttribute("alt")?.trim() || undefined,
+      });
+    } catch {
+      continue;
+    }
+  }
+
+  return results;
+}
+
 /**
  * Resolves a featured image from OpenGraph/Twitter/article meta tags.
  */
@@ -231,7 +300,7 @@ function extractFeaturedImage(dom: JSDOM, baseUrl: URL): string | null {
     try {
       const resolved = new URL(href, baseUrl.origin);
       if (!["http:", "https:"].includes(resolved.protocol)) continue;
-      return resolved.href;
+      return sanitizeImageUrl(resolved.href);
     } catch {
       continue;
     }

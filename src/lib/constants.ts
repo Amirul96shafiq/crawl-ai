@@ -6,3 +6,4 @@ export const MAX_PINNED_CHATS_GUEST = 1;
 export const MAX_PINNED_CHATS_USER = 5;
 export const GUEST_MESSAGES_PER_CHAT_LIMIT = 5;
 export const USER_MESSAGES_PER_CHAT_LIMIT = 30;
+export const MAX_IMAGES_TOTAL_FOR_CHAT = 20;

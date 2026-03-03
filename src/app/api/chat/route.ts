@@ -13,6 +13,7 @@ import { countTokens } from "@/lib/tokens";
 import {
   GUEST_MESSAGES_PER_CHAT_LIMIT,
   USER_MESSAGES_PER_CHAT_LIMIT,
+  MAX_IMAGES_TOTAL_FOR_CHAT,
 } from "@/lib/constants";
 import { apiError } from "@/lib/api-response";
 
@@ -83,6 +84,30 @@ export async function POST(request: Request) {
     .map((p) => `--- Page: ${p.url} ---\n${p.content}`)
     .join("\n\n");
 
+  const allPageImages: { url: string }[] = [];
+  for (const p of chat.pages) {
+    if (!p.images) continue;
+    try {
+      const parsed = JSON.parse(p.images) as { url: string; alt?: string }[];
+      if (Array.isArray(parsed)) {
+        for (const img of parsed) {
+          if (img?.url && typeof img.url === "string") {
+            allPageImages.push({ url: img.url });
+          }
+        }
+      }
+    } catch {
+      continue;
+    }
+  }
+  const pageImages = allPageImages.slice(0, MAX_IMAGES_TOTAL_FOR_CHAT);
+  const pageImageUrls = pageImages.map((img) => sanitizeImageUrl(img.url));
+
+  const imageUrlListText =
+    pageImageUrls.length > 0
+      ? `\n\nAVAILABLE IMAGES (use these URLs when the user asks for an image):\n${pageImageUrls.map((u) => `- ${u}`).join("\n")}\n\nWhen the user asks to see an image, show it, or "give me the image", you MUST include the relevant image using markdown: ![description](url). Use the exact URL from the list above.`
+      : "";
+
   const mainUrl = chat.pages[0] ? new URL(chat.pages[0].url).origin + "/" : "";
   const pageUrls = chat.pages.map((p) => p.url);
 
@@ -111,17 +136,19 @@ Example: "For more details, visit ${exampleParts.join(" or ")}."
   const systemMessage = `You are Echologue, an assistant that answers ONLY from the provided webpage content below.
 
 STRICT RULES:
-- Base your answers ONLY on the text in the sections below. Do not use external knowledge.
+- Base your answers ONLY on the text and images in the sections below. Do not use external knowledge.
 - If the answer is not in the content, say so clearly and you MUST include the crawled page URL(s) and/or main site URL as clickable markdown links. Never give a generic suggestion like "visit the main site" without the actual link.
 ${urlFallbackSection}
 - Do not add facts, examples, or details that are not explicitly in the content.
 - When citing, paraphrase or quote from the content. Do not invent.
 
-Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting URLs, ALWAYS use markdown links: [text](url).
+IMAGES: When the user asks for an image (e.g. "show me the horse image", "I want to see the image"):
+- If the content clearly specifies which image matches the request, include it using markdown: ![description](exact_image_url).
+- If the content does NOT specify which image matches, inform the user: "The content does not specify which image shows that. Check the images from the page listed above." Include the crawled page URL as a clickable link. Do not invent or guess.
 
---- WEBPAGE CONTENT ---
+Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting URLs, ALWAYS use markdown links: [text](url).`;
 
-${pageContext}`;
+  const contextUserContent = `--- WEBPAGE CONTENT ---\n\n${pageContext}${imageUrlListText}`;
 
   const isFirstExchange = chat.messages.length === 0;
 
@@ -161,10 +188,17 @@ ${pageContext}`;
   try {
     const modelMessages = await convertToModelMessages(messages);
 
+    const contextUserMessage = {
+      role: "user" as const,
+      content: contextUserContent,
+    };
+
+    const messagesToSend = [contextUserMessage, ...modelMessages];
+
     const result = streamText({
       model: openai("gpt-4.1-nano"),
       system: systemMessage,
-      messages: modelMessages,
+      messages: messagesToSend,
       temperature: 0.2,
       onError: ({ error }) => {
         console.error("Stream error:", error);
@@ -210,6 +244,17 @@ ${pageContext}`;
       }),
     });
   }
+}
+
+/**
+ * Fixes malformed URLs (e.g. double-embedded https://).
+ */
+function sanitizeImageUrl(url: string): string {
+  const secondProto = url.indexOf("https://", 8);
+  if (secondProto > 0) return url.slice(secondProto);
+  const secondHttp = url.indexOf("http://", 7);
+  if (secondHttp > 0) return url.slice(secondHttp);
+  return url;
 }
 
 /**

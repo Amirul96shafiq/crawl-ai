@@ -83,6 +83,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
           url: true,
           title: true,
           featuredImageUrl: true,
+          images: true,
           tokenCount: true,
         },
       },
