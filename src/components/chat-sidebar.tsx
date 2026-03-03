@@ -939,6 +939,51 @@ export function ChatSidebar({
       );
   }, []);
 
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { chatId } = (e as CustomEvent<{ chatId: string }>).detail ?? {};
+      if (!chatId) return;
+      const pollInterval = 3000;
+      const maxAttempts = 8;
+      let attempts = 0;
+      const poll = async () => {
+        if (attempts >= maxAttempts) return;
+        attempts += 1;
+        try {
+          const res = await fetch(`/api/chats/${chatId}`);
+          if (res.ok) {
+            const data = (await res.json()) as { title?: string | null };
+            const title = data.title?.trim() || null;
+            setChats((prev) =>
+              prev.map((c) => (c.id === chatId ? { ...c, title } : c)),
+            );
+            if (pathnameRef.current === `/chat/${chatId}`) {
+              document.title = title
+                ? `${title} - Echologue`
+                : "Echologue - Chat with your sources";
+            }
+            if (title) return;
+          }
+        } catch {
+          // ignore
+        }
+        setTimeout(poll, pollInterval);
+      };
+      setTimeout(poll, pollInterval);
+    };
+    window.addEventListener(
+      "echologue:chat-stream-complete",
+      handler as EventListener,
+    );
+    return () =>
+      window.removeEventListener(
+        "echologue:chat-stream-complete",
+        handler as EventListener,
+      );
+  }, []);
+
   const loadMore = useCallback(() => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);

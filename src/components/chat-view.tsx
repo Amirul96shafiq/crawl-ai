@@ -101,6 +101,20 @@ export function ChatView({
 
   const isLoading = status === "submitted" || status === "streaming";
 
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    const wasStreaming =
+      prevStatusRef.current === "submitted" || prevStatusRef.current === "streaming";
+    const isNowIdle =
+      status !== "submitted" && status !== "streaming";
+    prevStatusRef.current = status;
+    if (wasStreaming && isNowIdle) {
+      window.dispatchEvent(
+        new CustomEvent("echologue:chat-stream-complete", { detail: { chatId } }),
+      );
+    }
+  }, [status, chatId]);
+
   const initialMap = useMemo(
     () =>
       new Map(
