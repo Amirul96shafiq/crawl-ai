@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 import { getCallerIdentity } from "@/lib/guest";
 import { prisma } from "@/lib/db";
+import { apiError } from "@/lib/api-response";
 
 /**
- * Debug endpoint to diagnose empty chat list.
- * GET /api/debug-identity returns caller type, id, and chat count.
- * Remove or protect in production.
+ * Returns runtime caller identity details for local debugging only.
  */
 export async function GET() {
+  if (process.env.NODE_ENV !== "development") {
+    return apiError("Not found", 404);
+  }
+
   const caller = await getCallerIdentity();
   const where =
     caller.type === "user"

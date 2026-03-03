@@ -1,13 +1,19 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
 import { MAX_PINNED_CHATS_GUEST, MAX_PINNED_CHATS_USER } from "@/lib/constants";
+import { apiError, apiSuccess } from "@/lib/api-response";
 
+/**
+ * Builds an ownership-aware where clause for chat lookups.
+ */
 const getWhere = (id: string, caller: { type: string; id: string }) =>
   caller.type === "user"
     ? { id, userId: caller.id }
     : { id, guestId: caller.id };
 
+/**
+ * Returns a single chat and message history after ownership verification.
+ */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -32,9 +38,9 @@ export async function GET(
     },
   });
   if (!chat) {
-    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
   }
-  return NextResponse.json({
+  return apiSuccess({
     id: chat.id,
     title: chat.title,
     pages: chat.pages,
@@ -48,6 +54,9 @@ export async function GET(
   });
 }
 
+/**
+ * Updates chat metadata (title, pinned state, archived state) for its owner.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -60,7 +69,7 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      return apiError("Invalid JSON", 400, { code: "INVALID_JSON" });
     }
 
     const { title, pinned, archived } = body;
@@ -70,7 +79,7 @@ export async function PATCH(
       const chat = await prisma.chat.findFirst({ where });
 
       if (!chat) {
-        return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+        return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
       }
 
       await prisma.chat.update({
@@ -80,7 +89,7 @@ export async function PATCH(
           ...(archived === false && { createdAt: new Date() }),
         },
       });
-      return NextResponse.json({ updated: true });
+      return apiSuccess({ updated: true });
     }
 
     if (typeof pinned === "boolean") {
@@ -88,7 +97,7 @@ export async function PATCH(
       const chat = await prisma.chat.findFirst({ where });
 
       if (!chat) {
-        return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+        return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
       }
 
       const pinnedCount = await prisma.chat.count({
@@ -106,17 +115,15 @@ export async function PATCH(
 
       if (pinned) {
         if (chat.pinnedAt) {
-          return NextResponse.json({ updated: true });
+          return apiSuccess({ updated: true });
         }
         if (pinnedCount >= maxPinned) {
-          return NextResponse.json(
-            {
-              error:
-                caller.type === "user"
-                  ? "You can pin up to 5 chats"
-                  : "Guests can pin only 1 chat",
-            },
-            { status: 400 },
+          return apiError(
+            caller.type === "user"
+              ? "You can pin up to 5 chats"
+              : "Guests can pin only 1 chat",
+            400,
+            { code: "PIN_LIMIT_REACHED" },
           );
         }
         await prisma.chat.update({
@@ -129,36 +136,38 @@ export async function PATCH(
           data: { pinnedAt: null },
         });
       }
-      return NextResponse.json({ updated: true });
+      return apiSuccess({ updated: true });
     }
 
     if (typeof title !== "string") {
-      return NextResponse.json(
-        { error: "title must be a string" },
-        { status: 400 },
-      );
+      return apiError("title must be a string", 400, {
+        code: "INVALID_TITLE",
+      });
     }
 
     const where = getWhere(id, caller);
     const chat = await prisma.chat.findFirst({ where });
 
     if (!chat) {
-      return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+      return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
     }
 
     await prisma.chat.update({
       where: { id },
       data: { title: title.trim() || null },
     });
-    return NextResponse.json({ updated: true });
+    return apiSuccess({ updated: true });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Internal server error";
     console.error("[PATCH /api/chats/[id]]", err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(message, 500, { code: "CHAT_UPDATE_FAILED" });
   }
 }
 
+/**
+ * Permanently deletes an owned chat and cascaded related rows.
+ */
 export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -169,9 +178,9 @@ export async function DELETE(
   const chat = await prisma.chat.findFirst({ where });
 
   if (!chat) {
-    return NextResponse.json({ error: "Chat not found" }, { status: 404 });
+    return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
   }
 
   await prisma.chat.delete({ where: { id } });
-  return NextResponse.json({ deleted: true });
+  return apiSuccess({ deleted: true });
 }

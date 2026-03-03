@@ -39,6 +39,9 @@ interface ChatViewProps {
   initialRemainingQuestions: number;
 }
 
+/**
+ * Renders the interactive chat surface and coordinates streaming message state.
+ */
 export function ChatView({
   chatId,
   pages,
@@ -52,8 +55,15 @@ export function ChatView({
   const [remainingFromSession, setRemainingFromSession] = useState(
     initialRemainingQuestions,
   );
-  const [fetchedTokens, setFetchedTokens] = useState<MessageTokens[]>([]);
+  const [fetchedTokensById, setFetchedTokensById] = useState<
+    Record<string, MessageTokens>
+  >({});
+  const [fetchedTokensByIndex, setFetchedTokensByIndex] = useState<
+    MessageTokens[]
+  >([]);
   const wasLoadingRef = useRef(false);
+  const tokenFetchRequestRef = useRef(0);
+  const tokenFetchAbortRef = useRef<AbortController | null>(null);
   const { compact } = useAppearance();
   const searchParams = useSearchParams();
   const highlightMessageId = searchParams.get("highlight") ?? undefined;
@@ -89,22 +99,62 @@ export function ChatView({
   const isLoading = status === "submitted" || status === "streaming";
 
   useEffect(() => {
+    return () => {
+      tokenFetchAbortRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     if (wasLoadingRef.current && !isLoading) {
-      fetch(`/api/chats/${chatId}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.messages?.length) {
-            setFetchedTokens(
-              data.messages.map((m: { inputTokens?: number; outputTokens?: number }) => ({
-                inputTokens: m.inputTokens,
-                outputTokens: m.outputTokens,
-              })),
-            );
-          }
-        })
-        .catch(() => {});
+      tokenFetchRequestRef.current += 1;
+      const requestId = tokenFetchRequestRef.current;
+      tokenFetchAbortRef.current?.abort();
+      const controller = new AbortController();
+      tokenFetchAbortRef.current = controller;
+
+      const doFetch = () => {
+        fetch(`/api/chats/${chatId}`, { signal: controller.signal })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (
+              !data?.messages?.length ||
+              requestId !== tokenFetchRequestRef.current
+            ) {
+              return;
+            }
+            const apiMessages = data.messages as {
+              id: string;
+              inputTokens?: number;
+              outputTokens?: number;
+            }[];
+            const byId: Record<string, MessageTokens> = {};
+            const byIndex: MessageTokens[] = [];
+            for (let i = 0; i < apiMessages.length; i++) {
+              const message = apiMessages[i];
+              const tokens = {
+                inputTokens: message.inputTokens,
+                outputTokens: message.outputTokens,
+              };
+              byId[message.id] = tokens;
+              byIndex[i] = tokens;
+            }
+            setFetchedTokensById(byId);
+            setFetchedTokensByIndex(byIndex);
+          })
+          .catch((error) => {
+            if (error instanceof DOMException && error.name === "AbortError") {
+              return;
+            }
+          });
+      };
+
+      timeoutId = setTimeout(doFetch, 350);
     }
     wasLoadingRef.current = isLoading;
+    return () => {
+      if (timeoutId != null) clearTimeout(timeoutId);
+    };
   }, [isLoading, chatId]);
 
   const initialMap = useMemo(
@@ -125,10 +175,15 @@ export function ChatView({
   const displayMessages = useMemo(
     () =>
       messages.map((m, i) => {
-        const fetched = fetchedTokens[i];
+        const fetched = fetchedTokensById[m.id];
+        const byIndex = fetchedTokensByIndex[i];
         const initial = initialMap.get(m.id);
-        const inputTokens = fetched?.inputTokens ?? initial?.inputTokens;
-        const outputTokens = fetched?.outputTokens ?? initial?.outputTokens;
+        const inputTokens =
+          fetched?.inputTokens ?? byIndex?.inputTokens ?? initial?.inputTokens;
+        const outputTokens =
+          fetched?.outputTokens ??
+          byIndex?.outputTokens ??
+          initial?.outputTokens;
         const createdAt =
           initial?.createdAt ??
           (m as { createdAt?: Date }).createdAt?.toISOString?.() ??
@@ -146,7 +201,7 @@ export function ChatView({
           createdAt,
         };
       }),
-    [messages, fetchedTokens, initialMap],
+    [messages, fetchedTokensById, fetchedTokensByIndex, initialMap],
   );
 
   const userMessageCount = displayMessages.filter(
@@ -157,11 +212,17 @@ export function ChatView({
     : userMessageLimit - userMessageCount;
   const canSendMessage = remainingQuestions > 0;
 
+  /**
+   * Moves a suggested prompt into the input and focuses the composer.
+   */
   function handleSuggestionClick(text: string) {
     setInput(text);
     inputRef.current?.focus();
   }
 
+  /**
+   * Sends the current user message when limits/loading rules allow it.
+   */
   function handleSubmit() {
     if (!input.trim() || isLoading || !canSendMessage) return;
     const text = input;
@@ -194,6 +255,9 @@ export function ChatView({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [showScrollTopButton, setShowScrollTopButton] = useState(false);
 
+  /**
+   * Toggles floating scroll controls based on viewport position in the log.
+   */
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
@@ -205,6 +269,9 @@ export function ChatView({
     }
   };
 
+  /**
+   * Smooth-scrolls to the newest message.
+   */
   const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -214,6 +281,9 @@ export function ChatView({
     }
   };
 
+  /**
+   * Smooth-scrolls to the beginning of the conversation.
+   */
   const scrollToTop = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({

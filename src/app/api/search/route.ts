@@ -1,10 +1,20 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCallerIdentity } from "@/lib/guest";
+import { apiError, apiSuccess } from "@/lib/api-response";
 
 const MAX_CHATS_SEARCHED = 100;
 const SNIPPET_LENGTH = 120;
+type SearchableChat = {
+  id: string;
+  title: string | null;
+  archivedAt: Date | null;
+  pages: { id: string; url: string; content: string; title: string | null }[];
+  messages: { id: string; content: string }[];
+};
 
+/**
+ * Builds a short, centered snippet around a query match.
+ */
 function extractSnippet(text: string, query: string): string {
   const lowerText = text.toLowerCase();
   const lowerQuery = query.toLowerCase().trim();
@@ -23,6 +33,9 @@ function extractSnippet(text: string, query: string): string {
   return snippet;
 }
 
+/**
+ * Searches chats/messages/pages for the caller with optional archive scope.
+ */
 export async function GET(request: Request) {
   try {
     const caller = await getCallerIdentity();
@@ -34,23 +47,21 @@ export async function GET(request: Request) {
     const chatId = searchParams.get("chatId") ?? "";
 
     if (q.length < 2) {
-      return NextResponse.json(
-        { error: "Query must be at least 2 characters" },
-        { status: 400 },
-      );
+      return apiError("Query must be at least 2 characters", 400, {
+        code: "QUERY_TOO_SHORT",
+      });
     }
 
     if (scope === "current" && !chatId) {
-      return NextResponse.json(
-        { error: "chatId required when scope is current" },
-        { status: 400 },
-      );
+      return apiError("chatId required when scope is current", 400, {
+        code: "CHAT_ID_REQUIRED",
+      });
     }
 
     const ensureChatIncluded = chatId && scope === "all";
 
     if (includeArchived && caller.type === "guest") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return apiError("Unauthorized", 401, { code: "ARCHIVE_UNAUTHORIZED" });
     }
 
     const ownership =
@@ -58,14 +69,23 @@ export async function GET(request: Request) {
 
     const scopeFilter = scope === "current" ? { id: chatId } : {};
 
-    const baseWhere = { ...ownership, ...scopeFilter };
+    const searchWhere = {
+      OR: [
+        { title: { contains: q } },
+        { messages: { some: { content: { contains: q } } } },
+        { pages: { some: { content: { contains: q } } } },
+        { pages: { some: { url: { contains: q } } } },
+        { pages: { some: { title: { contains: q } } } },
+      ],
+    };
+    const baseWhere = { ...ownership, ...scopeFilter, ...searchWhere };
 
     const chatInclude = {
       pages: { select: { id: true, url: true, content: true, title: true } },
       messages: { select: { id: true, content: true } },
-    };
+    } as const;
 
-    let chats;
+    let chats: SearchableChat[];
 
     if (includeArchived) {
       const [activeChats, archivedChats] = await Promise.all([
@@ -86,21 +106,21 @@ export async function GET(request: Request) {
       const uniqueArchived = archivedChats.filter((c) => !seen.has(c.id));
       chats = [...activeChats, ...uniqueArchived];
     } else {
-      chats = await prisma.chat.findMany({
+      chats = (await prisma.chat.findMany({
         where: { ...baseWhere, archivedAt: null },
         take: MAX_CHATS_SEARCHED,
         orderBy: { createdAt: "desc" },
         include: chatInclude,
-      });
+      })) as SearchableChat[];
     }
 
     if (ensureChatIncluded) {
       const chatIds = new Set(chats.map((c) => c.id));
       if (!chatIds.has(chatId)) {
-        const currentChat = await prisma.chat.findFirst({
+        const currentChat = (await prisma.chat.findFirst({
           where: { id: chatId, ...ownership },
           include: chatInclude,
-        });
+        })) as SearchableChat | null;
         if (currentChat) {
           chats = [currentChat, ...chats];
         }
@@ -175,11 +195,11 @@ export async function GET(request: Request) {
         };
       });
 
-    return NextResponse.json({ results });
+    return apiSuccess({ results });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Internal server error";
     console.error("[GET /api/search]", err);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError(message, 500, { code: "SEARCH_FAILED" });
   }
 }

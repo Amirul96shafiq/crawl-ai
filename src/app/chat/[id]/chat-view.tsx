@@ -5,7 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { UrlBadge } from "@/components/url-badge";
 import { ChatMessages } from "@/components/chat-messages";
 import { ChatInput } from "@/components/chat-input";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 
 interface ChatViewProps {
   chatId: string;
@@ -17,8 +17,16 @@ interface ChatViewProps {
   }[];
 }
 
+/**
+ * ChatView function logic.
+ * Inputs: function parameters.
+ * Outputs: function return value.
+ * Side effects: none unless stated in implementation.
+ * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+ */
 export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
   const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const transport = useMemo(
     () => new DefaultChatTransport({ api: "/api/chat", body: { chatId } }),
@@ -47,6 +55,13 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
         .join("") || "",
   }));
 
+  /**
+   * handleSubmit function logic.
+   * Inputs: function parameters.
+   * Outputs: function return value.
+   * Side effects: none unless stated in implementation.
+   * Failure behavior: follows guard clauses and thrown/runtime errors in this block.
+   */
   function handleSubmit() {
     if (!input.trim() || isLoading) return;
     const text = input;
@@ -55,11 +70,15 @@ export function ChatView({ chatId, pages, initialMessages }: ChatViewProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto" ref={scrollRef}>
       <div className="pl-14 pr-4 pt-6 pb-3 md:pl-4">
         <UrlBadge pages={pages} />
       </div>
-      <ChatMessages messages={displayMessages} isLoading={isLoading} />
+      <ChatMessages
+        scrollRef={scrollRef}
+        messages={displayMessages}
+        isLoading={isLoading}
+      />
       <ChatInput
         input={input}
         onChange={setInput}

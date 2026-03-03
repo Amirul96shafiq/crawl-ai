@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Dialog,
@@ -36,6 +36,9 @@ interface SearchDialogProps {
 
 const DEBOUNCE_MS = 300;
 
+/**
+ * Renders the icon used for each search match type.
+ */
 function MatchIcon({ type }: { type: SearchMatch["type"] }) {
   switch (type) {
     case "title":
@@ -53,6 +56,9 @@ function MatchIcon({ type }: { type: SearchMatch["type"] }) {
   }
 }
 
+/**
+ * Maps match types to user-facing labels.
+ */
 function MatchTypeLabel({ type }: { type: SearchMatch["type"] }) {
   switch (type) {
     case "title":
@@ -66,6 +72,9 @@ function MatchTypeLabel({ type }: { type: SearchMatch["type"] }) {
   }
 }
 
+/**
+ * Provides debounced search across current/all chats with optional archived scope.
+ */
 export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,6 +88,8 @@ export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const searchRequestRef = useRef(0);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const isLoggedIn = !!user;
   const canSearchCurrent = !!currentChatId;
@@ -93,6 +104,12 @@ export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
 
     setLoading(true);
     setSearched(true);
+    searchRequestRef.current += 1;
+    const requestId = searchRequestRef.current;
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
     try {
       const params = new URLSearchParams({
         q,
@@ -102,17 +119,23 @@ export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
       if (currentChatId) {
         params.set("chatId", currentChatId);
       }
-      const res = await fetch(`/api/search?${params}`);
+      const res = await fetch(`/api/search?${params}`, { signal: controller.signal });
+      if (requestId !== searchRequestRef.current) return;
       if (res.ok) {
         const data = await res.json();
         setResults(data.results ?? []);
       } else {
         setResults([]);
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       setResults([]);
     } finally {
-      setLoading(false);
+      if (requestId === searchRequestRef.current) {
+        setLoading(false);
+      }
     }
   }, [query, scope, includeArchived, currentChatId]);
 
@@ -122,6 +145,20 @@ export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
     return () => clearTimeout(t);
   }, [open, query, scope, includeArchived, doSearch]);
 
+  useEffect(() => {
+    if (open) return;
+    searchAbortRef.current?.abort();
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      searchAbortRef.current?.abort();
+    };
+  }, []);
+
+  /**
+   * Navigates to a selected search hit in active or archived context.
+   */
   function handleResultClick(
     chatId: string,
     messageId: string | undefined,
@@ -260,7 +297,7 @@ export function SearchDialog({ open, onOpenChange, user }: SearchDialogProps) {
                               <span className="text-xs text-muted-foreground">
                                 <MatchTypeLabel type={match.type} />:{" "}
                               </span>
-                              <span className="text-sm break-words block">
+                              <span className="text-sm wrap-break-word block">
                                 {match.snippet}
                               </span>
                             </div>

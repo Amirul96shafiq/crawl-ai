@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String?
-  email        String   @unique
-  passwordHash String
-  image        String?
-  createdAt    DateTime @default(now())
-  chats        Chat[]
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  passwordHash    String
+  image           String?
+  imageUpdatedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  chats           Chat[]
 }
 
 model Guest {
@@ -38,6 +39,8 @@ model Chat {
 
   @@index([userId])
   @@index([guestId])
+  @@index([userId, createdAt])
+  @@index([guestId, createdAt])
   @@index([userId, pinnedAt])
   @@index([guestId, pinnedAt])
   @@index([userId, archivedAt])
@@ -68,4 +71,5 @@ model Message {
   createdAt    DateTime @default(now())
 
   @@index([chatId])
+  @@index([chatId, role, createdAt])
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -44,6 +44,9 @@ interface NewChatDialogProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+/**
+ * Drives the URL crawl and chat creation flow used by the "New Chat" dialog.
+ */
 export function NewChatDialog({
   children,
   guestRemaining,
@@ -67,6 +70,10 @@ export function NewChatDialog({
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
   const [linkSearch, setLinkSearch] = useState("");
   const [urlTouched, setUrlTouched] = useState(false);
+  const crawlRequestRef = useRef(0);
+  const createRequestRef = useRef(0);
+  const crawlAbortRef = useRef<AbortController | null>(null);
+  const createAbortRef = useRef<AbortController | null>(null);
 
   const limitReached = guestRemaining === 0;
 
@@ -83,6 +90,16 @@ export function NewChatDialog({
     }
   }, [url, urlTouched]);
 
+  useEffect(() => {
+    return () => {
+      crawlAbortRef.current?.abort();
+      createAbortRef.current?.abort();
+    };
+  }, []);
+
+  /**
+   * Resets the dialog state to its initial values.
+   */
   function reset() {
     setUrl("");
     setStep("url");
@@ -93,6 +110,9 @@ export function NewChatDialog({
     setUrlTouched(false);
   }
 
+  /**
+   * Crawls the primary URL and transitions to link-selection on success.
+   */
   async function handleCrawl() {
     if (!url.trim()) return;
 
@@ -104,12 +124,20 @@ export function NewChatDialog({
     }
 
     setCrawling(true);
+    crawlRequestRef.current += 1;
+    const requestId = crawlRequestRef.current;
+    crawlAbortRef.current?.abort();
+    const controller = new AbortController();
+    crawlAbortRef.current = controller;
+
     try {
       const res = await fetch("/api/crawl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
+        signal: controller.signal,
       });
+      if (requestId !== crawlRequestRef.current) return;
 
       if (!res.ok) {
         const data = await res.json();
@@ -117,15 +145,22 @@ export function NewChatDialog({
       }
 
       const data: CrawlResult = await res.json();
+      if (requestId !== crawlRequestRef.current) return;
       setCrawlResult(data);
       setStep("links");
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       toast.error(err instanceof Error ? err.message : "Failed to crawl URL");
     } finally {
-      setCrawling(false);
+      if (requestId === crawlRequestRef.current) {
+        setCrawling(false);
+      }
     }
   }
 
+  /**
+   * Toggles a sub-link selection while enforcing the max selected limit.
+   */
   function toggleLink(linkUrl: string) {
     setSelectedLinks((prev) => {
       const next = new Set(prev);
@@ -140,9 +175,17 @@ export function NewChatDialog({
     });
   }
 
+  /**
+   * Creates a chat from the crawled primary page and selected sub-links.
+   */
   async function handleCreate() {
     if (!crawlResult) return;
     setStep("creating");
+    createRequestRef.current += 1;
+    const requestId = createRequestRef.current;
+    createAbortRef.current?.abort();
+    const controller = new AbortController();
+    createAbortRef.current = controller;
 
     try {
       const res = await fetch("/api/chats", {
@@ -157,7 +200,9 @@ export function NewChatDialog({
           },
           subLinkUrls: Array.from(selectedLinks),
         }),
+        signal: controller.signal,
       });
+      if (requestId !== createRequestRef.current) return;
 
       if (!res.ok) {
         const data = await res.json();
@@ -165,6 +210,7 @@ export function NewChatDialog({
       }
 
       const data = await res.json();
+      if (requestId !== createRequestRef.current) return;
       setOpen(false);
       reset();
       onChatCreated?.();
@@ -172,12 +218,20 @@ export function NewChatDialog({
       router.push(`/chat/${data.id}`);
       router.refresh();
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       toast.error(err instanceof Error ? err.message : "Failed to create chat");
       setStep("links");
     }
   }
 
+  /**
+   * Handles dialog open state changes and cancels in-flight requests on close.
+   */
   const handleOpenChange = (v: boolean) => {
+    if (!v) {
+      crawlAbortRef.current?.abort();
+      createAbortRef.current?.abort();
+    }
     setOpen(v);
     if (!v) reset();
   };

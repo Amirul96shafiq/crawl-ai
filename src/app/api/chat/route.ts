@@ -14,13 +14,19 @@ import {
   GUEST_MESSAGES_PER_CHAT_LIMIT,
   USER_MESSAGES_PER_CHAT_LIMIT,
 } from "@/lib/constants";
+import { apiError } from "@/lib/api-response";
 
+/**
+ * Streams an assistant response for an owned chat while enforcing per-chat quotas.
+ */
 export async function POST(request: Request) {
   const body = await request.json();
   const { chatId, messages } = body;
 
   if (!chatId || !messages?.length) {
-    return new Response("chatId and messages are required", { status: 400 });
+    return apiError("chatId and messages are required", 400, {
+      code: "CHAT_INPUT_REQUIRED",
+    });
   }
 
   const caller = await getCallerIdentity();
@@ -34,7 +40,7 @@ export async function POST(request: Request) {
   });
 
   if (!chat) {
-    return new Response("Chat not found", { status: 404 });
+    return apiError("Chat not found", 404, { code: "CHAT_NOT_FOUND" });
   }
 
   const limit =
@@ -206,6 +212,9 @@ ${pageContext}`;
   }
 }
 
+/**
+ * Normalizes the last user message to plain text for persistence/title generation.
+ */
 function extractTextFromMessage(
   msg: Record<string, unknown> | undefined,
 ): string {
@@ -220,6 +229,9 @@ function extractTextFromMessage(
   return "";
 }
 
+/**
+ * Creates a short auto-title for the first chat exchange.
+ */
 async function generateTitle(chatId: string, firstMessage: string) {
   const { text } = await generateText({
     model: openai("gpt-4.1-nano"),
