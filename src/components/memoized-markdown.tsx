@@ -144,6 +144,34 @@ const MarkdownBlock = memo(
             img: ({ src, alt, className, ...props }) => (
               <MarkdownImage src={src} alt={alt} className={className} {...props} />
             ),
+            table: ({ children }) => (
+              <div className="my-4 overflow-x-auto rounded-md border border-border">
+                <table className="w-max min-w-full border-collapse text-sm">
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => (
+              <thead className="border-b border-border bg-muted/50">
+                {children}
+              </thead>
+            ),
+            tbody: ({ children }) => <tbody>{children}</tbody>,
+            tr: ({ children }) => (
+              <tr className="border-b border-border last:border-b-0">
+                {children}
+              </tr>
+            ),
+            th: ({ children }) => (
+              <th className="whitespace-nowrap border-r border-border px-4 py-2 text-left font-semibold last:border-r-0">
+                {children}
+              </th>
+            ),
+            td: ({ children }) => (
+              <td className="border-r border-border px-4 py-2 align-top last:border-r-0">
+                {children}
+              </td>
+            ),
           }}
         >
           {content}
