@@ -9,7 +9,7 @@
 | Database       | Prisma ORM + SQLite                     | Data persistence                      |
 | Authentication | NextAuth.js v5 (Auth.js) + bcryptjs     | Email/password auth with JWT sessions |
 | AI             | Vercel AI SDK (`ai` + `@ai-sdk/openai`) | Streaming chat with OpenAI            |
-| AI Model       | OpenAI GPT-4.1-nano                     | Fast, low-cost chat and title generation |
+| AI Model       | OpenAI GPT-4.1-nano                     | Chat and title generation             |
 | Crawling       | @mozilla/readability + jsdom            | HTML content extraction               |
 
 ## High-Level Architecture
@@ -30,7 +30,7 @@ User Browser
     └── NextAuth endpoints      → Login/logout/session
           │
           ├── Prisma ORM → SQLite database
-          └── OpenAI API → GPT-4.1-nano
+          └── OpenAI API → gpt-4.1-nano
 ```
 
 ## Data Flow: Crawling a URL

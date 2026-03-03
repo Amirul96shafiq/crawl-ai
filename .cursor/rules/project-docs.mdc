@@ -23,5 +23,5 @@ Before making changes, consult the project docs in `docs/`:
 - **Guest system**: cookie-based `guest_id`, 3 chats/day limit, migrated on login AND registration
 - **Crawling**: fetch + JSDOM + Mozilla Readability; sub-link discovery with user selection (max 5)
 - **AI context**: all ChatPage contents injected as system message per chat request
-- **Streaming**: Vercel AI SDK `useChat` hook + `streamText()` with OpenAI GPT-4o-mini
+- **Streaming**: Vercel AI SDK `useChat` hook + `streamText()` with OpenAI GPT-4.1-nano
 - **Chat ownership**: `Chat.userId` (registered) XOR `Chat.guestId` (guest), never both
