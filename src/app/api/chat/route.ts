@@ -196,7 +196,7 @@ Use Markdown when helpful: **bold**, lists, \`code\`, headings. When suggesting 
     const messagesToSend = [contextUserMessage, ...modelMessages];
 
     const result = streamText({
-      model: openai("gpt-4.1-nano"),
+      model: openai("gpt-4.1"),
       system: systemMessage,
       messages: messagesToSend,
       temperature: 0.2,
@@ -290,7 +290,7 @@ function extractTextFromMessage(
  */
 async function generateTitle(chatId: string, firstMessage: string) {
   const { text } = await generateText({
-    model: openai("gpt-4.1-nano"),
+    model: openai("gpt-4.1"),
     prompt: `Generate a short title (max 6 words) for a conversation that starts with this question. Return ONLY the title, no quotes or punctuation around it:\n\n"${firstMessage}"`,
     maxOutputTokens: 20,
   });

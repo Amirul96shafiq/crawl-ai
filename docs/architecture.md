@@ -30,7 +30,7 @@ User Browser
     └── NextAuth endpoints      → Login/logout/session
           │
           ├── Prisma ORM → SQLite database
-          └── OpenAI API → gpt-4.1-nano
+          └── OpenAI API → gpt-4.1
 ```
 
 ## Data Flow: Crawling a URL
@@ -54,7 +54,7 @@ User Browser
 4. Server builds the prompt:
    - System message: instructions + all page contents (labeled by URL)
    - Message history: all previous user/assistant messages
-5. Server calls OpenAI via Vercel AI SDK's `streamText()` using `gpt-4.1-nano`
+5. Server calls OpenAI via Vercel AI SDK's `streamText()` using `gpt-4.1`
 6. Tokens stream back to the browser in real-time
 7. After first exchange, a background call generates a short chat title
 
