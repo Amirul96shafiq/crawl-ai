@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type RefObject } from "react";
+import { useEffect, useMemo, useState, useRef, type RefObject } from "react";
 import { useAppearance } from "@/components/appearance-provider";
 import { MemoizedMarkdown } from "@/components/memoized-markdown";
 import { Bot, Calendar, Clock, Copy, MoreHorizontal } from "lucide-react";
@@ -120,6 +120,104 @@ interface ChatMessagesProps {
   primaryPageUrl?: string;
   pages?: { url: string; title: string | null; images?: string | null }[];
   onSuggestionClick?: (text: string) => void;
+}
+
+function MessageBubble({
+  message,
+  fontSizeClass,
+  lineSpacingClass,
+  compact,
+  highlightMessageId,
+}: {
+  message: DisplayMessage;
+  fontSizeClass: string;
+  lineSpacingClass: string;
+  compact: boolean;
+  highlightMessageId?: string;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [contentHeight, setContentHeight] = useState<number | undefined>(undefined);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    
+    const observer = new ResizeObserver(() => {
+      setContentHeight(el.scrollHeight);
+      if (el.scrollHeight > 450) {
+        setIsOverflowing(true);
+      } else {
+        setIsOverflowing(false);
+      }
+    });
+    
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [message.content]);
+
+  return (
+    <div className={cn("flex flex-col gap-1", message.role === "user" ? "items-end max-w-[50%]" : "items-start max-w-[85%]")}>
+      <div
+        ref={contentRef}
+        data-message-id={message.id}
+        style={{
+          maxHeight: isOverflowing ? (isExpanded ? `${contentHeight}px` : "420px") : undefined,
+        }}
+        className={cn(
+          message.role === "user" ? "w-fit shrink-0" : "w-full",
+          fontSizeClass,
+          lineSpacingClass,
+          compact
+            ? "rounded-xl px-3 py-2"
+            : "rounded-2xl px-4 py-2.5",
+          message.role === "user"
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted",
+          message.id === highlightMessageId &&
+            "ring-4 ring-primary ring-offset-4 ring-offset-background",
+          isOverflowing ? "transition-[max-height] duration-300 ease-in-out overflow-hidden relative" : ""
+        )}
+      >
+        {message.role === "assistant" ? (
+          message.content ? (
+            <MemoizedMarkdown
+              content={message.content}
+              id={message.id}
+            />
+          ) : null
+        ) : (
+          <span className="whitespace-pre-wrap">
+            {message.content}
+          </span>
+        )}
+        {isOverflowing && (
+          <div
+            className={cn(
+              "absolute bottom-0 left-0 right-0 h-12 bg-linear-to-t pointer-events-none transition-opacity duration-300",
+              message.role === "user"
+                ? "from-primary to-transparent"
+                : "from-muted to-transparent",
+              isExpanded ? "opacity-0" : "opacity-100"
+            )}
+          />
+        )}
+      </div>
+      {isOverflowing && (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={cn(
+            "text-xs font-medium hover:underline px-1",
+            message.role === "user" ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          {isExpanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -357,37 +455,13 @@ export function ChatMessages({
                   message.role === "user" ? "justify-end" : "justify-start",
                 )}
               >
-                <div
-                  data-message-id={message.id}
-                  className={cn(
-                    message.role === "user"
-                      ? "w-fit max-w-[50%] shrink-0"
-                      : "max-w-[85%]",
-                    fontSizeClass,
-                    lineSpacingClass,
-                    compact
-                      ? "rounded-xl px-3 py-2"
-                      : "rounded-2xl px-4 py-2.5",
-                    message.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted",
-                    message.id === highlightMessageId &&
-                      "ring-4 ring-primary ring-offset-4 ring-offset-background",
-                  )}
-                >
-                  {message.role === "assistant" ? (
-                    message.content ? (
-                      <MemoizedMarkdown
-                        content={message.content}
-                        id={message.id}
-                      />
-                    ) : null
-                  ) : (
-                    <span className="whitespace-pre-wrap">
-                      {message.content}
-                    </span>
-                  )}
-                </div>
+                <MessageBubble
+                  message={message}
+                  fontSizeClass={fontSizeClass}
+                  lineSpacingClass={lineSpacingClass}
+                  compact={compact}
+                  highlightMessageId={highlightMessageId}
+                />
               </div>
               <div
                 className={cn(
