@@ -103,7 +103,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
                     : "Question limit reached for this chat"
                   : "Ask anything about the crawled page(s)..."
               }
-              className="min-h-[44px] max-h-[200px] resize-none pr-12 rounded-full py-4 px-6"
+              className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto pr-20 rounded-[28px] py-4 px-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               rows={1}
               disabled={isDisabled}
             />
