@@ -22,6 +22,7 @@ interface ChatInputProps {
   remainingQuestions?: number;
   questionLimit?: number;
   resetsDaily?: boolean;
+  maxLength?: number;
 }
 
 export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
@@ -42,6 +43,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
       remainingQuestions,
       questionLimit,
       resetsDaily = false,
+      maxLength = 1000,
     },
     ref,
   ) {
@@ -96,6 +98,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
               value={input}
               onChange={(e) => onChange(e.target.value)}
               onKeyDown={handleKeyDown}
+              maxLength={maxLength}
               placeholder={
                 disabled
                   ? resetsDaily
@@ -103,7 +106,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
                     : "Question limit reached for this chat"
                   : "Ask anything about the crawled page(s)..."
               }
-              className="min-h-[44px] max-h-[200px] resize-none overflow-y-auto pr-20 rounded-[28px] py-4 px-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              className="min-h-[44px] max-h-[150px] resize-none overflow-y-auto pr-20 rounded-[28px] py-4 px-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               rows={1}
               disabled={isDisabled}
             />
@@ -128,6 +131,9 @@ export const ChatInput = forwardRef<HTMLTextAreaElement | null, ChatInputProps>(
                 </TooltipContent>
               </Tooltip>
             </div>
+          </div>
+          <div className={cn("flex justify-center px-4 text-[10px] transition-colors", input.length >= maxLength ? "text-destructive" : "text-muted-foreground/50")}>
+            {input.length}/{maxLength}
           </div>
         </div>
       </div>
